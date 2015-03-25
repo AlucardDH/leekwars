@@ -19,7 +19,7 @@ https://raw.githubusercontent.com/AlucardDH/leekwars/master/examples/ex_var.JPG
 https://raw.githubusercontent.com/AlucardDH/leekwars/master/examples/ex_global.jpg
 
 ## Note de version :
-* v 0.1 (2015-03-25) : *
+### v 0.1 (2015-03-25) :
 - support des "tag" @level, @param, @result
 - descriptions encadrées par //** *//
 - mise à jour de la documentation toutes les 5s
