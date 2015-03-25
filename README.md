@@ -21,6 +21,6 @@ https://raw.githubusercontent.com/AlucardDH/leekwars/master/examples/ex_global.j
 ## Note de version :
 ### v 0.1 (2015-03-25) :
 - support des "tag" @level, @param, @result
-- descriptions encadrées par //** *//
+- descriptions encadrées par /** */
 - mise à jour de la documentation toutes les 5s
 - ajout du numéro de la ligne de définition de la fonction/variable
