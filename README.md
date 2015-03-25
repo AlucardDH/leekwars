@@ -9,7 +9,7 @@ Je n'y ai passé que quelques heures pour l'instant donc n'hésitez pas à me si
 
 
 ## Lien de téléchargement :
-* https://github.com/AlucardDH/leekwars/raw/master/leekwars_custom_documentation.js *
+https://github.com/AlucardDH/leekwars/raw/master/leekwars_custom_documentation.js
 
 ### Exemples
 Et puisque des petites images valent mieux que des longs discours, voici des exemples :
