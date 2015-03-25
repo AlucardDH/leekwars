@@ -1,5 +1,4 @@
-# leekwars
-Userscripts pour faciliter l'utilisation de Leek Wars
+#Leek Wars Editor Custom Documentation
 
 Bonjour à tous,
 
