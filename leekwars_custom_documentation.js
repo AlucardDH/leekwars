@@ -1,14 +1,15 @@
-// ==UserScript==
-// @name          Leek Wars Editor Custom Documentation
-// @namespace     https://github.com/AlucardDH/leekwars
-// @version       0.1
-// @description   Help you to visualize your own documention in your code
-// @author        AlucardDH
-// @match         http://leekwars.com/editor
-// @require       https://code.jquery.com/jquery-2.1.1.min.js
-// @grant         GM_getValue
-// @grant         GM_setValue
-// @grant         GM_log
+ï»¿// ==UserScript==
+// @name			Leek Wars Editor Custom Documentation
+// @namespace		https://github.com/AlucardDH/leekwars
+// @version			0.2
+// @description		Help you to visualize your own documention in your code
+// @author			AlucardDH
+// @projectPage		https://github.com/AlucardDH/leekwars
+// @downloadURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_custom_documentation.js
+// @updateURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_custom_documentation.js
+// @match			http://leekwars.com/editor
+// @grant			GM_getValue
+// @grant			GM_setValue
 // ==/UserScript==
 
 var GM_LEEKWARS_STRORAGE_BASE = "leekwars.doc.";
@@ -63,9 +64,9 @@ function docToString(doc){
 		result += "<br/>"+doc.description+"<br/>";
 	}
 
-// Paramètres
+// ParamÃ¨tres
 	if(doc.params.length>0) {
-		result += "<br/><b>Paramètres</b><ul>";
+		result += "<br/><b>Param&egrave;tres</b><ul>";
 		for(var paramIndex=0;paramIndex<doc.params.length;paramIndex++) {
 			var param = doc.params[paramIndex];
 			result += "<li>"+param.name;
@@ -77,7 +78,7 @@ function docToString(doc){
 		result += "</ul>";
 	}
 	
-// Résultat
+// RÃ©sultat
 	if(doc.result) {
 		result += "<br/><b>Retour</b><ul>";
 		result += "<li>"+doc.result.name;
@@ -88,7 +89,7 @@ function docToString(doc){
 	}
 	
 // Source
-	result += "<br/>Défini dans l'IA <b>"+doc.ai+"</b> ligne "+doc.line;
+	result += "<br/>D&eacute;fini dans l'IA <b>"+doc.ai+"</b> ligne "+doc.line;
 	
 	return result;
 };
@@ -126,11 +127,9 @@ function getVariableDeclarationName(line) {
 	return line.find("."+LEEKWARS_VARIABLE_CLASS+LEEKWARS_DECLARATION_CLASS).next().text();
 }
 
-// Récupération de la doc
+// RÃ©cupÃ©ration de la doc
 function leekWarsUpdateDoc() {
-	//GM_log("leekWarsUpdateDoc()");
 	var aiName = $(LEEKWARS_AI_NAME).text();
-//	GM_log("Updating doc for "+aiName);
 	var linesOfCode = $('div.editor').filter(function(){return $(this).css("display")=="block";}).find('.CodeMirror-lines div div div pre');
 
 	var currentDoc = null;
@@ -141,22 +140,18 @@ function leekWarsUpdateDoc() {
 		var line = $(linesOfCode[lineNumber]);
 		
 		var text = line.text();
-		console.log(text);
 		
 		if(text==LEEKWARS_DOC_START) {
-			//GM_log("LEEKWARS_DOC_START at line "+displayedLineNumber);
 			
 			currentDoc = {};
 			currentDoc.params = [];
 			currentDoc.ai = aiName;
 			
 		} else if(text==LEEKWARS_DOC_END) {
-			endOfDocLine = lineNumber;
-			//GM_log("LEEKWARS_DOC_END at line "+displayedLineNumber);			
+			endOfDocLine = lineNumber;			
 			
 		} else if(isFunctionDeclaration(line)) {
-			//console.log("isFunctionDeclaration : "+getFunctionDeclarationName(line));
-			// Décalaration d'une fonction
+			// DÃ©calaration d'une fonction
 			if(!currentDoc || endOfDocLine!=lineNumber-1) {
 				currentDoc = {};
 				currentDoc.params = getFunctionDeclarationParams(line);
@@ -175,8 +170,7 @@ function leekWarsUpdateDoc() {
 			currentDoc = null;
 		
 		} else if(isVariableDeclaration(line)) {
-			//console.log("isVariableDeclaration : "+getVariableDeclarationName(line));
-			// Décalaration d'une variable
+			// DÃ©calaration d'une variable
 			if(!currentDoc || endOfDocLine!=lineNumber-1) {
 				currentDoc = {};
 				currentDoc.params = [];
@@ -235,21 +229,18 @@ function leekWarsUpdateDoc() {
 }
 
 function leekwarsUpdateHintDetails() {
-	//GM_log("leekwarsUpdateHintDetails()");
+
 	var dialog = $(".hint-dialog").filter(function(){return $(this).css("display")=="block";});
 	if(dialog.length>0) {
-		//GM_log("dialog !");
 	
 		var hints = dialog.children(".hints");
 		var details = dialog.children(".details");
 
 		var currentHint = hints.children(".active").text();
-		//GM_log("currentHint : "+currentHint);
 		var currentDetail = details.children().filter(function(){return $(this).css("display")=="block";});
 
 		var newDetails = GM_getValue(GM_LEEKWARS_STRORAGE_BASE+currentHint);
 		if(newDetails) {
-			//GM_log("new details : "+newDetails);
 			currentDetail.html(newDetails);
 		}
 	}
