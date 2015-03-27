@@ -15,17 +15,20 @@ https://github.com/AlucardDH/leekwars/raw/master/leekwars_custom_documentation.u
 Et puisque des petites images valent mieux que des longs discours, voici des exemples :
 
 v0.1 :
+
 https://raw.githubusercontent.com/AlucardDH/leekwars/master/examples/ex_function.jpg
 https://raw.githubusercontent.com/AlucardDH/leekwars/master/examples/ex_function2.jpg
 https://raw.githubusercontent.com/AlucardDH/leekwars/master/examples/ex_var.JPG
 https://raw.githubusercontent.com/AlucardDH/leekwars/master/examples/ex_global.jpg
 
 v0.3 :
+
 https://raw.githubusercontent.com/AlucardDH/leekwars/master/examples/ex_completion_plus.jpg
 https://raw.githubusercontent.com/AlucardDH/leekwars/master/examples/ex_completion_parameters.jpg
 https://raw.githubusercontent.com/AlucardDH/leekwars/master/examples/ex_completion_parameters2.jpg
 
 v0.4 :
+
 https://raw.githubusercontent.com/AlucardDH/leekwars/master/examples/ex_global2.jpg
 https://raw.githubusercontent.com/AlucardDH/leekwars/master/examples/ex_ops.jpg
 https://raw.githubusercontent.com/AlucardDH/leekwars/master/examples/ex_ops2.jpg
