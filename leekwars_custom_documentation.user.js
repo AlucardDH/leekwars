@@ -8,6 +8,9 @@
 // @downloadURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_custom_documentation.user.js
 // @updateURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_custom_documentation.user.js
 // @match			http://leekwars.com/editor
+// @match			http://leekwars.com/editor/*
+// @include        	http://leekwars.com/editor
+// @include        	http://leekwars.com/editor/*
 // @grant			GM_getValue
 // @grant			GM_setValue
 // ==/UserScript==
