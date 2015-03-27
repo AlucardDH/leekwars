@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.5
+// @version			0.6
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -381,9 +381,60 @@ function leekwarsUpdateHintDetails() {
 			}
 		}
 	}
+	
+	leekWarsUpdateToolTips();
+}
+
+function showDetailDialog() {
+	var elementFunction = $(this);
+	var functionName = elementFunction.text();
+	var doc = getDocumentation(functionName);
+	if(doc!=null) {
+		var completion = docToCompletion(doc);
+		getEditor().detailDialog.html(completion.detail);
+		setTimeout(function(){
+			getEditor().detailDialog.css("display","block");
+			
+			getEditor().detailDialog.css("left",elementFunction.offset().left);
+			if(elementFunction.offset().top+16+getEditor().detailDialog.outerHeight()>$(window).height()) {
+				getEditor().detailDialog.css("top",elementFunction.offset().top-getEditor().detailDialog.outerHeight()-16);
+			} else {
+				getEditor().detailDialog.css("top",elementFunction.offset().top+16);
+			}
+		},200);
+		
+	}
+}
+
+function hideDetailDialog() {
+	getEditor().detailDialog.css("display","none");
+}
+
+function leekWarsUpdateToolTips() {
+	var functionsEls = getEditorDiv().find("."+LEEKWARS_FONCTION_CLASS);
+	functionsEls.off('mouseenter');
+	functionsEls.off('mouseleave');
+	functionsEls.on('mouseenter',showDetailDialog);
+	functionsEls.on('mouseleave',hideDetailDialog);
+	
+	functionsEls = getEditorDiv().find("."+LEEKWARS_VARIABLE_CLASS);
+	functionsEls.off('mouseenter');
+	functionsEls.off('mouseleave');
+	functionsEls.on('mouseenter',showDetailDialog);
+	functionsEls.on('mouseleave',hideDetailDialog);
+}
+
+function moveTooltip() {
+	if(getEditor().detailDialog.css("display")=="block") {
+		var top = getEditor().detailDialog.offset().top;
+		var height = getEditor().detailDialog.outerHeight();
+		if(top+height>$(window).height()) {
+			getEditor().detailDialog.css("top",top-height-32);
+		}
+	}
 }
 
 
 setInterval(leekWarsUpdateDoc,2000);
 setInterval(leekwarsUpdateHintDetails,200);
-
+setInterval(moveTooltip,200);
