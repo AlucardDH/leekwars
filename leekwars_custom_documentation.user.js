@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.6
+// @version			0.6.1
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -396,7 +396,7 @@ function showDetailDialog() {
 			getEditor().detailDialog.css("display","block");
 			
 			getEditor().detailDialog.css("left",elementFunction.offset().left);
-			if(elementFunction.offset().top+16+getEditor().detailDialog.outerHeight()>$(window).height()) {
+			if(elementFunction.offset().top+16-$(window).scrollTop()+getEditor().detailDialog.outerHeight()>$(window).height()) {
 				getEditor().detailDialog.css("top",elementFunction.offset().top-getEditor().detailDialog.outerHeight()-16);
 			} else {
 				getEditor().detailDialog.css("top",elementFunction.offset().top+16);
@@ -411,24 +411,37 @@ function hideDetailDialog() {
 }
 
 function leekWarsUpdateToolTips() {
-	var functionsEls = getEditorDiv().find("."+LEEKWARS_FONCTION_CLASS);
-	functionsEls.off('mouseenter');
-	functionsEls.off('mouseleave');
-	functionsEls.on('mouseenter',showDetailDialog);
-	functionsEls.on('mouseleave',hideDetailDialog);
+	var els = getEditorDiv().find("."+LEEKWARS_FONCTION_CLASS);
+	for(var index=0;index<els.length;index++) {
+		var el = $(els[index]);
+		var doc = getDocumentation(el.text());
+		if(doc) {
+			el.off('mouseenter');
+			el.off('mouseleave');
+			el.on('mouseenter',showDetailDialog);
+			el.on('mouseleave',hideDetailDialog);
+		}		
+	}
 	
-	functionsEls = getEditorDiv().find("."+LEEKWARS_VARIABLE_CLASS);
-	functionsEls.off('mouseenter');
-	functionsEls.off('mouseleave');
-	functionsEls.on('mouseenter',showDetailDialog);
-	functionsEls.on('mouseleave',hideDetailDialog);
+	els = getEditorDiv().find("."+LEEKWARS_VARIABLE_CLASS);
+	for(var index=0;index<els.length;index++) {
+		var el = $(els[index]);
+		var doc = getDocumentation(el.text());
+		if(doc) {
+			el.off('mouseenter');
+			el.off('mouseleave');
+			el.on('mouseenter',showDetailDialog);
+			el.on('mouseleave',hideDetailDialog);
+		}		
+	}
 }
 
 function moveTooltip() {
 	if(getEditor().detailDialog.css("display")=="block") {
 		var top = getEditor().detailDialog.offset().top;
+		var windowScroll = $(window).scrollTop();
 		var height = getEditor().detailDialog.outerHeight();
-		if(top+height>$(window).height()) {
+		if(top-windowScroll+height>$(window).height()) {
 			getEditor().detailDialog.css("top",top-height-32);
 		}
 	}
