@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.4
+// @version			0.5
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -11,8 +11,7 @@
 // @match			http://leekwars.com/editor/*
 // @include        	http://leekwars.com/editor
 // @include        	http://leekwars.com/editor/*
-// @grant			GM_getValue
-// @grant			GM_setValue
+// @grant			none
 // ==/UserScript==
 
 var GM_LEEKWARS_STRORAGE_BASE = "leekwars.doc.";
@@ -28,8 +27,6 @@ var LEEKWARS_FONCTION_CLASS = "cm-function";
 var LEEKWARS_VARIABLE_CLASS = "cm-variable";
 var LEEKWARS_DECLARATION_CLASS = "-declaration";
 
-var LEEKWARS_AI_NAME = "#ai-name";
-
 var LEEKWARS_DOC_PARAM = "@param";
 var LEEKWARS_DOC_RETURN = "@return";
 var LEEKWARS_DOC_LEVEL = "@level";
@@ -37,35 +34,39 @@ var LEEKWARS_DOC_OPS = "@ops";
 
 var LEEKWARS_VALUE_REGEX = /.*=(.*);/i;
 
-unsafeWindow.IA_FUNCTIONS = [];
-unsafeWindow.DOCUMENTATION = null;
+IA_FUNCTIONS = [];
+DOCUMENTATION = null;
+
+// Persistance __________________________________________________________________________
 
 function getDocumentation(name) {
-	if(!unsafeWindow.DOCUMENTATION) {
-		unsafeWindow.DOCUMENTATION = {};
+	if(!DOCUMENTATION) {
+		DOCUMENTATION = {};
 	}
-	if(!unsafeWindow.DOCUMENTATION[name]) {
-		var jsonDoc = GM_getValue(GM_LEEKWARS_STRORAGE_BASE+name);
+	if(!DOCUMENTATION[name]) {
+		var jsonDoc = localStorage.getItem(GM_LEEKWARS_STRORAGE_BASE+name);
 		if(jsonDoc!==null) {
             try {
-                unsafeWindow.DOCUMENTATION[name] = JSON.parse(jsonDoc);
+                DOCUMENTATION[name] = JSON.parse(jsonDoc);
             } catch(e) {
-                GM_setValue(GM_LEEKWARS_STRORAGE_BASE+name,null);
-				unsafeWindow.DOCUMENTATION[name] = null;
+                localStorage.setItem(GM_LEEKWARS_STRORAGE_BASE+name,null);
+				DOCUMENTATION[name] = null;
             }
 			
 		}
 	}
-	return unsafeWindow.DOCUMENTATION[name];
+	return DOCUMENTATION[name];
 }
 
 function setDocumentation(doc) {
-	if(!unsafeWindow.DOCUMENTATION) {
-		unsafeWindow.DOCUMENTATION = {};
+	if(!DOCUMENTATION) {
+		DOCUMENTATION = {};
 	}
-	unsafeWindow.DOCUMENTATION[doc.name] = doc;
-	GM_setValue(GM_LEEKWARS_STRORAGE_BASE+doc.name,JSON.stringify(doc));
+	DOCUMENTATION[doc.name] = doc;
+	localStorage.setItem(GM_LEEKWARS_STRORAGE_BASE+doc.name,JSON.stringify(doc));
 }
+
+// Formattage _________________________________________________________________________
 
 function docToCompletionName(doc) {
 	var result = doc.name;
@@ -176,6 +177,8 @@ function docToCompletion(doc) {
 	return {name:docToCompletionName(doc),text:doc.name,type:doc.type,detail:docToString(doc),custom:true};
 }
 
+// Parsing ____________________________________________________________________________________________
+
 function isFunctionDeclaration(line) {
 	return line.find("."+LEEKWARS_FONCTION_CLASS+LEEKWARS_DECLARATION_CLASS).length>0;
 }
@@ -209,12 +212,28 @@ function getVariableDeclarationName(line) {
 	return line.find("."+LEEKWARS_VARIABLE_CLASS+LEEKWARS_DECLARATION_CLASS).next().text();
 }
 
+function getEditor() {
+	return editors[current];
+}
+
+function getEditorDiv() {
+	return $("#"+getEditor().id+".editor");
+}
+
+function getIAName() {
+	return getEditor().name;
+}
+
+function getCurrentToken() {
+	return getEditor().editor.getTokenAt(getEditor().editor.getCursor()).string.trim().toLowerCase();
+}
+
 // Récupération de la doc
 function leekWarsUpdateDoc() {
-	var aiName = $(LEEKWARS_AI_NAME).text();
-	unsafeWindow.IA_FUNCTIONS = [];
-	
-	var linesOfCode = $('div.editor').filter(function(){return $(this).css("display")=="block";}).find('.CodeMirror-lines div div div pre');
+	var aiName = getIAName();
+	IA_FUNCTIONS = [];
+
+	var linesOfCode = getEditorDiv().find('.CodeMirror-lines div div div pre');
 
 	var currentDoc = null;
 	var endOfDocLine = null;
@@ -251,7 +270,7 @@ function leekWarsUpdateDoc() {
 			currentDoc.line = displayedLineNumber;
 			
 			setDocumentation(currentDoc);
-			unsafeWindow.IA_FUNCTIONS.push(currentDoc.name);
+			IA_FUNCTIONS.push(currentDoc.name);
 			currentDoc = null;
 		
 		} else if(isVariableDeclaration(line)) {
@@ -323,54 +342,48 @@ function leekWarsUpdateDoc() {
 	}
 }
 
-function getCurrentToken() {
-	return editors[current].editor.getTokenAt(editors[current].editor.getCursor()).string.trim().toLowerCase();
-}
-
 function leekwarsUpdateHintDetails() {
-
-	var dialog = editors[current].hintDialog;
+	
+	var dialog = getEditor().hintDialog;
 	if(dialog.css("display")=="block") {	
+		
 		var start = getCurrentToken();
 		
 		var alreadyPresentHints = [];
 		
-		var completions = editors[current].completions;
-		
-		$.each(completions,function(index,completion) {
-			
+		var completions = getEditor().completions;
+
+		for(var index=0;index<completions.length;index++) {
+			var completion = completions[index];
+
 			alreadyPresentHints.push(completion.text);
-			
 			if(!completion.custom) {
 				var doc = getDocumentation(completion.text);
 				if(doc) {
-
 					completions[index] = docToCompletion(doc);
-
-					
-					$(editors[current].hintDialog.children(".hints").children()[index]).html(completions[index].name);
-					$(editors[current].hintDialog.children(".details").children()[index]).html(completions[index].detail);					
+					$(getEditor().hintDialog.children(".hints").children()[index]).html(completions[index].name);
+					$(getEditor().hintDialog.children(".details").children()[index]).html(completions[index].detail);					
 				}
 			}
 			
-		});
-
-
-		$.each(IA_FUNCTIONS,function(index,hint) {
-			if($.inArray(hint,alreadyPresentHints)<0 && hint.toLowerCase().indexOf(start)==0) {
+		}
+		
+		for(var index=0;index<IA_FUNCTIONS.length;index++) {
+			var hint = IA_FUNCTIONS[index];
+			if(alreadyPresentHints.indexOf(hint)<0 && hint.toLowerCase().indexOf(start)==0) {
 				var doc = getDocumentation(hint);
 
 				var completion = docToCompletion(doc);
 
 				completions.push(completion);
-				$(editors[current].hintDialog.children(".hints")).append(getHintHtml(completion.name));
-				$(editors[current].hintDialog.children(".details")).append(getDetailHtml(completion.detail));
+				$(getEditor().hintDialog.children(".hints")).append(getHintHtml(completion.name));
+				$(getEditor().hintDialog.children(".details")).append(getDetailHtml(completion.detail));
 			}
-		});
+		}
 	}
 }
 
-$(document).ready(function() {
-	setInterval(leekWarsUpdateDoc,2000);
-	setInterval(leekwarsUpdateHintDetails,200);
-});
+
+setInterval(leekWarsUpdateDoc,2000);
+setInterval(leekwarsUpdateHintDetails,200);
+
