@@ -1,12 +1,12 @@
 ﻿// ==UserScript==
 // @name			Leek Wars Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.3
+// @version			0.4
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
-// @downloadURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_custom_documentation.js
-// @updateURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_custom_documentation.js
+// @downloadURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_custom_documentation.user.js
+// @updateURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_custom_documentation.user.js
 // @match			http://leekwars.com/editor
 // @grant			GM_getValue
 // @grant			GM_setValue
@@ -30,6 +30,9 @@ var LEEKWARS_AI_NAME = "#ai-name";
 var LEEKWARS_DOC_PARAM = "@param";
 var LEEKWARS_DOC_RETURN = "@return";
 var LEEKWARS_DOC_LEVEL = "@level";
+var LEEKWARS_DOC_OPS = "@ops";
+
+var LEEKWARS_VALUE_REGEX = /.*=(.*);/i;
 
 unsafeWindow.IA_FUNCTIONS = [];
 unsafeWindow.DOCUMENTATION = null;
@@ -104,12 +107,28 @@ function docToString(doc){
 	
 // Niveau
 	if(doc.level) {
-		result += "Niveau "+doc.level;
+		result += "Niveau "+doc.level+"<br/>";
 	}
-
+	
+// Opérations
+	if(doc.ops) {
+		var intValue = parseInt(doc.ops);
+		if(!isNaN(intValue)) {
+			result += "<b>"+intValue+"</b> opérations<br/>";
+		} else {
+			result += "Opérations <b>"+doc.ops+"</b><br/>";
+		}
+		
+	}
+	
 // Description
 	if(doc.description) {
-		result += "<br/>"+doc.description+"<br/>";
+		result += doc.description+"<br/>";
+	}
+	
+// Valeur initiale
+	if(doc.value) {
+		result += "<br/><b>Valeur initiale</b><ul><li>"+doc.value+"</li></ul>";
 	}
 
 // Paramètres
@@ -241,6 +260,12 @@ function leekWarsUpdateDoc() {
 			}
 			
 			currentDoc.type = line.find("."+LEEKWARS_VARIABLE_CLASS+LEEKWARS_DECLARATION_CLASS).text();
+			if(currentDoc.type==LEEKWARS_KEYWORD_GLOBAL) {
+				var testValue = LEEKWARS_VALUE_REGEX.exec(line.text());
+				if(testValue[1]) {
+					currentDoc.value = testValue[1].trim();
+				}
+			}
 			currentDoc.name = getVariableDeclarationName(line);
 			currentDoc.line = displayedLineNumber;
 			
@@ -249,11 +274,15 @@ function leekWarsUpdateDoc() {
 		
 		} else if(currentDoc) {
 			
+			var opsIndex = text.indexOf(LEEKWARS_DOC_OPS);
 			var levelIndex = text.indexOf(LEEKWARS_DOC_LEVEL);
 			var paramIndex = text.indexOf(LEEKWARS_DOC_PARAM);
 			var returnIndex = text.indexOf(LEEKWARS_DOC_RETURN);
 			
-			if(levelIndex>-1) {
+			if(opsIndex>-1) {
+				currentDoc.ops = text.substring(opsIndex+LEEKWARS_DOC_OPS.length).trim();
+				
+			} else if(levelIndex>-1) {
 				currentDoc.level = text.substring(levelIndex+LEEKWARS_DOC_LEVEL.length).trim();
 				
 			} else if(paramIndex>-1) {
