@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.6.1
+// @version			0.6.2
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -443,6 +443,14 @@ function moveTooltip() {
 		var height = getEditor().detailDialog.outerHeight();
 		if(top-windowScroll+height>$(window).height()) {
 			getEditor().detailDialog.css("top",top-height-32);
+		}
+	}
+	if(getEditor().hintDialog.css("display")=="block") {
+		var top = getEditor().hintDialog.offset().top;
+		var windowScroll = $(window).scrollTop();
+		var height = getEditor().hintDialog.outerHeight();
+		if(top-windowScroll+height>$(window).height()) {
+			getEditor().hintDialog.css("top",top-height-32);
 		}
 	}
 }
