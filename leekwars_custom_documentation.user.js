@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.9
+// @version			0.9.1
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -272,8 +272,16 @@ function getCompleteIncludeList() {
 	return result;
 }
 
+UPDATING_DOC = false;
+
 // Récupération de la doc
 function leekWarsUpdateDoc() {
+	if(UPDATING_DOC) {
+		return;
+	}
+	
+	UPDATING_DOC = true;
+	
 	var backupCurrent = current;
 	var includes = getCompleteIncludeList();
 	var loaded = [];
@@ -284,6 +292,8 @@ function leekWarsUpdateDoc() {
 		var include = includes[index];
 	//	console.log(include+" to load ?");
 		if(!IA_LOADED[include]) {
+			hideDetailDialog();
+			hideHintDialog();
 			needToShow = true;
 			IA_LOADED[include] = true;
 			
@@ -314,6 +324,7 @@ function leekWarsUpdateDoc() {
 	
 	leekWarsUpdateDocIa(backupCurrent);
 	
+	UPDATING_DOC = false;
 }
 
 function leekWarsUpdateDocIa(iaId) {
@@ -516,6 +527,10 @@ function hideDetailDialog() {
 	getEditor().detailDialog.css("display","none");
 }
 
+function hideHintDialog() {
+	getEditor().hintDialog.css("display","none");
+}
+
 function leekWarsUpdateToolTips() {
 	var els = getEditorDiv().find("."+LEEKWARS_FONCTION_CLASS);
 	for(var index=0;index<els.length;index++) {
@@ -632,7 +647,8 @@ $(document).keydown(function(e) {
 		}
 		
 		hideDetailDialog();
-			
+		hideHintDialog();
+		
 		if(doc.aiId!=current) {
 			getEditor(doc.aiId).show();
 			current = doc.aiId;
