@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.8.1
+// @version			0.9
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -277,12 +277,14 @@ function leekWarsUpdateDoc() {
 	var backupCurrent = current;
 	var includes = getCompleteIncludeList();
 	var loaded = [];
+	var needToShow = false;
 	
 //	console.log("Need to load : " + includes);
 	for(var index=0;index<includes.length;index++) {
 		var include = includes[index];
 	//	console.log(include+" to load ?");
 		if(!IA_LOADED[include]) {
+			needToShow = true;
 			IA_LOADED[include] = true;
 			
 			var recheck = function(include) {
@@ -300,7 +302,7 @@ function leekWarsUpdateDoc() {
 		}
 	}
 	
-	if(includes.length>0) {
+	if(needToShow) {
 		var intervalCheck = setInterval(function(){
 			if(loaded.length==includes.length) {
 			//	console.log("All IA loaded");
@@ -618,8 +620,8 @@ $(document).keydown(function(e) {
 		return;
 	}
 
-	// Ctrl-Shift-Z : go to definition
-	if (e.shiftKey && e.ctrlKey && e.keyCode == 90) {
+	// Ctrl-Shift-G : go to definition
+	if (e.shiftKey && e.ctrlKey && e.keyCode == 71) {
 		var token = getCurrentToken();
 		if(token==null) {
 			return;
@@ -638,7 +640,9 @@ $(document).keydown(function(e) {
 		
 		setTimeout(function() {
 			var line = getLine(doc.line-1);
+			var topLine = getLine(Math.max(0,doc.line-15));
 			getEditor().editor.setCursor({"line":doc.line-1,"ch":0});
+			window.scrollTo(0,$(topLine).offset().top);
 			window.scrollTo(0,$(line).offset().top);
 		},500);
 		
