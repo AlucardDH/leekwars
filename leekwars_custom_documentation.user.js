@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.7
+// @version			0.8
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -35,6 +35,7 @@ var LEEKWARS_DOC_OPS = "@ops";
 var LEEKWARS_VALUE_REGEX = /.*=(.*);/i;
 
 IA_FUNCTIONS = [];
+IA_LOADED = [];
 DOCUMENTATION = null;
 
 // Persistance __________________________________________________________________________
@@ -165,12 +166,12 @@ function docToString(doc){
 	return result;
 }
 
-function getHintHtml(hint) {
-	return '<div class="hint" style="color: red;">'+hint+'</div>';
+function getHintHtml(hint,warning) {
+	return '<div class="hint"'+(warning ? ' style="color: red;"' : '')+'>'+hint+'</div>';
 }
 
-function getDetailHtml(content) {
-	return '<div class="detail" style="display: none;"><span style="color:red">Attention, cette fonction est d&eacute;finie plus loin dans le code</span><br/>'+content+'</div>';
+function getDetailHtml(content,warning) {
+	return '<div class="detail" style="display: none;">'+(warning ? '<span style="color:red">Attention, cette fonction est d&eacute;finie plus loin dans le code</span><br/>' : '')+content+'</div>';
 }
 
 function docToCompletion(doc) {
@@ -212,16 +213,16 @@ function getVariableDeclarationName(line) {
 	return line.find("."+LEEKWARS_VARIABLE_CLASS+LEEKWARS_DECLARATION_CLASS).next().text();
 }
 
-function getEditor() {
-	return editors[current];
+function getEditor(iaId) {
+	return editors[iaId ? iaId : current];
 }
 
-function getEditorDiv() {
-	return getEditor().editorDiv;
+function getEditorDiv(iaId) {
+	return getEditor(iaId).editorDiv;
 }
 
-function getIAName() {
-	return getEditor().name;
+function getIAName(iaId) {
+	return getEditor(iaId).name;
 }
 
 function getCurrentToken() {
@@ -236,16 +237,69 @@ function getNextLine() {
 	return $(getLines()[getCurrentCursor().line+1]);
 }
 
-function getLines() {
-	return getEditorDiv().find('.CodeMirror-lines div div div pre');
+function getLines(iaId) {
+	return getEditorDiv(iaId).find('.CodeMirror-lines div div div pre');
+}
+
+function getCompleteIncludeList() {
+	var checkedIAs = [];
+	var toCheckIAs = [];
+	var result = [];
+	
+	toCheckIAs.push(current);
+	
+	while(toCheckIAs.length!==0) {
+		var iaCheck = toCheckIAs.pop();
+		checkedIAs.push(iaCheck);
+		var includes = getEditor().includes;
+		for(var index=0;index<includes.length;index++) {
+			var include = includes[index];
+			if(result.indexOf(include)<0) {
+				result.push(include);
+			}
+			if(checkedIAs.indexOf(include)<0) {
+				toCheckIAs.push(include);
+			}
+		}
+	}
+
+	return result;
 }
 
 // Récupération de la doc
 function leekWarsUpdateDoc() {
-	var aiName = getIAName();
-	IA_FUNCTIONS = [];
+	var otherIALoaded = false;
+	
+	var backupCurrent = current;
+	var includes = getCompleteIncludeList();
+	for(var index=0;index<includes.length;index++) {
+		var include = includes[index];
+		if(!IA_LOADED[include]) {
+			IA_LOADED[include] = true;
+			getEditor(include).load(true);
+			setTimeout(function(){leekWarsUpdateDocIa(include);},2000);
+			otherIALoaded = true;
+		}
+	}
+	
+	
+	if(otherIALoaded) {
+		setTimeout(function(){getEditor(backupCurrent).show();},1000);
+	}
+	leekWarsUpdateDocIa(backupCurrent);
+	
+}
 
-	var linesOfCode = getLines();
+function leekWarsUpdateDocIa(iaId) {
+	
+	IA_FUNCTIONS[iaId] = [];
+	
+	var linesOfCode = getLines(iaId);
+	if(!linesOfCode || linesOfCode.length===0) {
+		return;
+	}
+
+	var aiName = getIAName(iaId);
 
 	var currentDoc = null;
 	var endOfDocLine = null;
@@ -282,7 +336,7 @@ function leekWarsUpdateDoc() {
 			currentDoc.line = displayedLineNumber;
 			
 			setDocumentation(currentDoc);
-			IA_FUNCTIONS.push(currentDoc.name);
+			IA_FUNCTIONS[iaId].push(currentDoc.name);
 			currentDoc = null;
 		
 		} else if(isVariableDeclaration(line)) {
@@ -352,6 +406,8 @@ function leekWarsUpdateDoc() {
 			
 		}
 	}
+	
+	IA_LOADED[iaId] = true;
 }
 
 function leekwarsUpdateHintDetails() {
@@ -365,6 +421,7 @@ function leekwarsUpdateHintDetails() {
 		
 		var completions = getEditor().completions;
 
+		// Fonctions déjà proposées
 		for(var index=0;index<completions.length;index++) {
 			var completion = completions[index];
 
@@ -379,17 +436,20 @@ function leekwarsUpdateHintDetails() {
 			}
 			
 		}
-		
-		for(var index=0;index<IA_FUNCTIONS.length;index++) {
-			var hint = IA_FUNCTIONS[index];
-			if(alreadyPresentHints.indexOf(hint)<0 && hint.toLowerCase().indexOf(start)==0) {
-				var doc = getDocumentation(hint);
 
-				var completion = docToCompletion(doc);
+		// Fonctions de cette ia manquante
+		if(IA_LOADED[current]) {
+			for(var index=0;index<IA_FUNCTIONS[current].length;index++) {
+				var hint = IA_FUNCTIONS[current][index];
+				if(alreadyPresentHints.indexOf(hint)<0 && hint.toLowerCase().indexOf(start)==0) {
+					var doc = getDocumentation(hint);
 
-				completions.push(completion);
-				$(getEditor().hintDialog.children(".hints")).append(getHintHtml(completion.name));
-				$(getEditor().hintDialog.children(".details")).append(getDetailHtml(completion.detail));
+					var completion = docToCompletion(doc);
+
+					completions.push(completion);
+					$(getEditor().hintDialog.children(".hints")).append(getHintHtml(completion.name,true));
+					$(getEditor().hintDialog.children(".details")).append(getDetailHtml(completion.detail,true));
+				}
 			}
 		}
 	}
@@ -491,7 +551,7 @@ function autoDoc() {
 				autoDoc[2] += "\n@param "+doc.params[index].name+" ";
 			}
 			autoDoc[2] += "\n@return ";
-			autoDoc[2] += "\n*/";		
+			autoDoc[2] += "\n*/";
 			AUTO_SHORTCUTS[AUTODOC_INDEX] = autoDoc;	
 			return;
 		}
