@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.6.2
+// @version			0.6.3
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -284,7 +284,7 @@ function leekWarsUpdateDoc() {
 			currentDoc.type = line.find("."+LEEKWARS_VARIABLE_CLASS+LEEKWARS_DECLARATION_CLASS).text();
 			if(currentDoc.type==LEEKWARS_KEYWORD_GLOBAL) {
 				var testValue = LEEKWARS_VALUE_REGEX.exec(line.text());
-				if(testValue[1]) {
+				if(testValue && testValue[1]) {
 					currentDoc.value = testValue[1].trim();
 				}
 			}
