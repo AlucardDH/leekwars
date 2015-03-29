@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.8
+// @version			0.8.1
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -226,7 +226,7 @@ function getIAName(iaId) {
 }
 
 function getCurrentToken() {
-	return getEditor().editor.getTokenAt(getCurrentCursor()).string.trim().toLowerCase();
+	return getEditor().editor.getTokenAt(getCurrentCursor());
 }
 
 function getCurrentCursor() {
@@ -241,6 +241,10 @@ function getLines(iaId) {
 	return getEditorDiv(iaId).find('.CodeMirror-lines div div div pre');
 }
 
+function getLine(number) {
+	return getLines()[number];
+}
+
 function getCompleteIncludeList() {
 	var checkedIAs = [];
 	var toCheckIAs = [];
@@ -252,13 +256,15 @@ function getCompleteIncludeList() {
 		var iaCheck = toCheckIAs.pop();
 		checkedIAs.push(iaCheck);
 		var includes = getEditor().includes;
-		for(var index=0;index<includes.length;index++) {
-			var include = includes[index];
-			if(result.indexOf(include)<0) {
-				result.push(include);
-			}
-			if(checkedIAs.indexOf(include)<0) {
-				toCheckIAs.push(include);
+		if(includes) {
+			for(var index=0;index<includes.length;index++) {
+				var include = includes[index];
+				if(result.indexOf(include)<0) {
+					result.push(include);
+				}
+				if(checkedIAs.indexOf(include)<0) {
+					toCheckIAs.push(include);
+				}
 			}
 		}
 	}
@@ -268,35 +274,53 @@ function getCompleteIncludeList() {
 
 // Récupération de la doc
 function leekWarsUpdateDoc() {
-	var otherIALoaded = false;
-	
 	var backupCurrent = current;
 	var includes = getCompleteIncludeList();
+	var loaded = [];
+	
+//	console.log("Need to load : " + includes);
 	for(var index=0;index<includes.length;index++) {
 		var include = includes[index];
+	//	console.log(include+" to load ?");
 		if(!IA_LOADED[include]) {
 			IA_LOADED[include] = true;
-			getEditor(include).load(true);
-			setTimeout(function(){leekWarsUpdateDocIa(include);},2000);
-			otherIALoaded = true;
+			
+			var recheck = function(include) {
+				getEditor(include).load(true);
+				if(leekWarsUpdateDocIa(include)) {
+				//	console.log("Done IA "+include);
+					loaded.push(include);
+				} else {
+					setTimeout(recheck,300,include);
+				}
+			}
+			setTimeout(recheck,300,include);
+		} else {
+			loaded.push(include);
 		}
 	}
 	
-	
-	if(otherIALoaded) {
-		setTimeout(function(){getEditor(backupCurrent).show();},1000);
+	if(includes.length>0) {
+		var intervalCheck = setInterval(function(){
+			if(loaded.length==includes.length) {
+			//	console.log("All IA loaded");
+				clearInterval(intervalCheck);
+				getEditor(backupCurrent).show();
+			}
+		},500);
 	}
+	
 	leekWarsUpdateDocIa(backupCurrent);
 	
 }
 
 function leekWarsUpdateDocIa(iaId) {
-	
+	//console.log("trying to load "+iaId);
 	IA_FUNCTIONS[iaId] = [];
 	
 	var linesOfCode = getLines(iaId);
 	if(!linesOfCode || linesOfCode.length===0) {
-		return;
+		return false;
 	}
 
 	var aiName = getIAName(iaId);
@@ -305,109 +329,117 @@ function leekWarsUpdateDocIa(iaId) {
 	var endOfDocLine = null;
 	
 	for(var lineNumber=0;lineNumber<linesOfCode.length;lineNumber++) {
-		var displayedLineNumber = lineNumber+1;
-		var line = $(linesOfCode[lineNumber]);
-		
-		var text = line.text();
-		
-		if(text==LEEKWARS_DOC_START) {
+	//	console.log(aiName+" "+lineNumber);
+		try {
+			var displayedLineNumber = lineNumber+1;
+			var line = $(linesOfCode[lineNumber]);
 			
-			currentDoc = {};
-			currentDoc.params = [];
-			currentDoc.ai = aiName;
+			var text = line.text();
 			
-		} else if(text==LEEKWARS_DOC_END) {
-			endOfDocLine = lineNumber;			
-			
-		} else if(isFunctionDeclaration(line)) {
-			// Décalaration d'une fonction
-			if(!currentDoc || endOfDocLine!=lineNumber-1) {
-				currentDoc = {};
-				currentDoc.params = getFunctionDeclarationParams(line);
-				currentDoc.ai = aiName;
-			}
-			
-			if(currentDoc.params.length===0) {
-				currentDoc.params = getFunctionDeclarationParams(line);
-			}
-			
-			currentDoc.type = LEEKWARS_KEYWORD_FUNCTION;
-			currentDoc.name = getFunctionDeclarationName(line);
-			currentDoc.line = displayedLineNumber;
-			
-			setDocumentation(currentDoc);
-			IA_FUNCTIONS[iaId].push(currentDoc.name);
-			currentDoc = null;
-		
-		} else if(isVariableDeclaration(line)) {
-			// Décalaration d'une variable
-			if(!currentDoc || endOfDocLine!=lineNumber-1) {
+			if(text==LEEKWARS_DOC_START) {
+				
 				currentDoc = {};
 				currentDoc.params = [];
 				currentDoc.ai = aiName;
-			}
-			
-			currentDoc.type = line.find("."+LEEKWARS_VARIABLE_CLASS+LEEKWARS_DECLARATION_CLASS).text();
-			if(currentDoc.type==LEEKWARS_KEYWORD_GLOBAL) {
-				var testValue = LEEKWARS_VALUE_REGEX.exec(line.text());
-				if(testValue && testValue[1]) {
-					currentDoc.value = testValue[1].trim();
+				currentDoc.aiId = iaId;
+				
+			} else if(text==LEEKWARS_DOC_END) {
+				endOfDocLine = lineNumber;			
+				
+			} else if(isFunctionDeclaration(line)) {
+				// Décalaration d'une fonction
+				if(!currentDoc || endOfDocLine!=lineNumber-1) {
+					currentDoc = {};
+					currentDoc.params = getFunctionDeclarationParams(line);
+					currentDoc.ai = aiName;
+					currentDoc.aiId = iaId;
 				}
-			}
-			currentDoc.name = getVariableDeclarationName(line);
-			currentDoc.line = displayedLineNumber;
-			
-			setDocumentation(currentDoc);
-			currentDoc = null;
-		
-		} else if(currentDoc) {
-			
-			var opsIndex = text.indexOf(LEEKWARS_DOC_OPS);
-			var levelIndex = text.indexOf(LEEKWARS_DOC_LEVEL);
-			var paramIndex = text.indexOf(LEEKWARS_DOC_PARAM);
-			var returnIndex = text.indexOf(LEEKWARS_DOC_RETURN);
-			
-			if(opsIndex>-1) {
-				currentDoc.ops = text.substring(opsIndex+LEEKWARS_DOC_OPS.length).trim();
 				
-			} else if(levelIndex>-1) {
-				currentDoc.level = text.substring(levelIndex+LEEKWARS_DOC_LEVEL.length).trim();
+				if(currentDoc.params.length===0) {
+					currentDoc.params = getFunctionDeclarationParams(line);
+				}
 				
-			} else if(paramIndex>-1) {
-				var subText = text.substring(paramIndex+LEEKWARS_DOC_PARAM.length).trim();
-				var paramNameEndIndex = subText.indexOf(" ");
-				var param = {};
-				if(paramNameEndIndex>-1) {
-					param.name = subText.substring(0,paramNameEndIndex);
-					param.description = subText.substring(paramNameEndIndex).trim();
+				currentDoc.type = LEEKWARS_KEYWORD_FUNCTION;
+				currentDoc.name = getFunctionDeclarationName(line);
+				currentDoc.line = displayedLineNumber;
+				
+				setDocumentation(currentDoc);
+				IA_FUNCTIONS[iaId].push(currentDoc.name);
+				currentDoc = null;
+			
+			} else if(isVariableDeclaration(line)) {
+				// Décalaration d'une variable
+				if(!currentDoc || endOfDocLine!=lineNumber-1) {
+					currentDoc = {};
+					currentDoc.params = [];
+					currentDoc.ai = aiName;
+					currentDoc.aiId = iaId;
+				}
+				
+				currentDoc.type = line.find("."+LEEKWARS_VARIABLE_CLASS+LEEKWARS_DECLARATION_CLASS).text();
+				if(currentDoc.type==LEEKWARS_KEYWORD_GLOBAL) {
+					var testValue = LEEKWARS_VALUE_REGEX.exec(line.text());
+					if(testValue && testValue[1]) {
+						currentDoc.value = testValue[1].trim();
+					}
+				}
+				currentDoc.name = getVariableDeclarationName(line);
+				currentDoc.line = displayedLineNumber;
+				
+				setDocumentation(currentDoc);
+				currentDoc = null;
+			
+			} else if(currentDoc) {
+				
+				var opsIndex = text.indexOf(LEEKWARS_DOC_OPS);
+				var levelIndex = text.indexOf(LEEKWARS_DOC_LEVEL);
+				var paramIndex = text.indexOf(LEEKWARS_DOC_PARAM);
+				var returnIndex = text.indexOf(LEEKWARS_DOC_RETURN);
+				
+				if(opsIndex>-1) {
+					currentDoc.ops = text.substring(opsIndex+LEEKWARS_DOC_OPS.length).trim();
+					
+				} else if(levelIndex>-1) {
+					currentDoc.level = text.substring(levelIndex+LEEKWARS_DOC_LEVEL.length).trim();
+					
+				} else if(paramIndex>-1) {
+					var subText = text.substring(paramIndex+LEEKWARS_DOC_PARAM.length).trim();
+					var paramNameEndIndex = subText.indexOf(" ");
+					var param = {};
+					if(paramNameEndIndex>-1) {
+						param.name = subText.substring(0,paramNameEndIndex);
+						param.description = subText.substring(paramNameEndIndex).trim();
+					} else {
+						param.name = subText;
+					}
+					currentDoc.params.push(param);
+					
+				} else if(returnIndex>-1) {
+					var subText = text.substring(returnIndex+LEEKWARS_DOC_RETURN.length).trim();
+					var paramNameEndIndex = subText.indexOf(" ");
+					var param = {};
+					if(paramNameEndIndex>-1) {
+						param.name = subText.substring(0,paramNameEndIndex);
+						param.description = subText.substring(paramNameEndIndex).trim();
+					} else {
+						param.name = subText;
+					}
+					currentDoc.result = param;
+					
 				} else {
-					param.name = subText;
-				}
-				currentDoc.params.push(param);
+					if(!currentDoc.description) {
+						currentDoc.description = "";
+					}
+					currentDoc.description += "<br/>"+text.trim();
+				}		
 				
-			} else if(returnIndex>-1) {
-				var subText = text.substring(returnIndex+LEEKWARS_DOC_RETURN.length).trim();
-				var paramNameEndIndex = subText.indexOf(" ");
-				var param = {};
-				if(paramNameEndIndex>-1) {
-					param.name = subText.substring(0,paramNameEndIndex);
-					param.description = subText.substring(paramNameEndIndex).trim();
-				} else {
-					param.name = subText;
-				}
-				currentDoc.result = param;
-				
-			} else {
-				if(!currentDoc.description) {
-					currentDoc.description = "";
-				}
-				currentDoc.description += "<br/>"+text.trim();
-			}		
-			
+			}
+		} catch(e) {
+			console.error('LeekWars Custom Doc : error while parsing "'+aiName+'" line '+lineNumber);
 		}
 	}
 	
-	IA_LOADED[iaId] = true;
+	return true;
 }
 
 function leekwarsUpdateHintDetails() {
@@ -415,7 +447,7 @@ function leekwarsUpdateHintDetails() {
 	var dialog = getEditor().hintDialog;
 	if(dialog.css("display")=="block") {	
 		
-		var start = getCurrentToken();
+		var start = getCurrentToken().string.trim().toLowerCase();
 		
 		var alreadyPresentHints = [];
 		
@@ -490,12 +522,21 @@ function leekWarsUpdateToolTips() {
 		var doc = getDocumentation(el.text());
 		if(!custom && doc) {
 			el.attr("custom","yes");
-			el.on('mouseenter',showDetailDialog);
-			el.on('mouseleave',hideDetailDialog);		
+			el.on('mouseenter.customDoc',showDetailDialog);
+			el.on('mouseleave.customDoc',hideDetailDialog);	
+			/*
+			el.on('click.customDoc',function(e){
+				console.log(e);
+				if (e.ctrlKey) {
+					console.log("ctrl+click on "+$(e.target).text());
+				}
+			});	
+*/			
 		} else if(custom && !doc) {
 			el.attr("custom","no");
-			el.off('mouseenter');
-			el.off('mouseleave');
+			el.off('mouseenter.customDoc');
+			el.off('mouseleave.customDoc');
+			//el.off('click.customDoc');	
 		}
 	}
 	
@@ -506,12 +547,12 @@ function leekWarsUpdateToolTips() {
 		var doc = getDocumentation(el.text());
 		if(!custom && doc) {
 			el.attr("custom","yes");
-			el.on('mouseenter',showDetailDialog);
-			el.on('mouseleave',hideDetailDialog);		
+			el.on('mouseenter.customDoc',showDetailDialog);
+			el.on('mouseleave.customDoc',hideDetailDialog);		
 		} else if(custom && !doc) {
 			el.attr("custom","no");
-			el.off('mouseenter');
-			el.off('mouseleave');
+			el.off('mouseenter.customDoc');
+			el.off('mouseleave.customDoc');
 		}	
 	}
 }
@@ -571,3 +612,37 @@ setInterval(leekWarsUpdateDoc,2000);
 setInterval(leekwarsUpdateHintDetails,200);
 setInterval(moveTooltip,200);
 setInterval(autoDoc,100);
+
+$(document).keydown(function(e) {
+	if (current == null) {
+		return;
+	}
+
+	// Ctrl-Shift-Z : go to definition
+	if (e.shiftKey && e.ctrlKey && e.keyCode == 90) {
+		var token = getCurrentToken();
+		if(token==null) {
+			return;
+		}
+		var doc = getDocumentation(token.string.trim());
+		if(doc==null) {
+			return;
+		}
+		
+		hideDetailDialog();
+			
+		if(doc.aiId!=current) {
+			getEditor(doc.aiId).show();
+			current = doc.aiId;
+		}
+		
+		setTimeout(function() {
+			var line = getLine(doc.line-1);
+			getEditor().editor.setCursor({"line":doc.line-1,"ch":0});
+			window.scrollTo(0,$(line).offset().top);
+		},500);
+		
+	
+		e.preventDefault();
+	}
+});
