@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.6.3
+// @version			0.7
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -217,7 +217,7 @@ function getEditor() {
 }
 
 function getEditorDiv() {
-	return $("#"+getEditor().id+".editor");
+	return getEditor().editorDiv;
 }
 
 function getIAName() {
@@ -225,7 +225,19 @@ function getIAName() {
 }
 
 function getCurrentToken() {
-	return getEditor().editor.getTokenAt(getEditor().editor.getCursor()).string.trim().toLowerCase();
+	return getEditor().editor.getTokenAt(getCurrentCursor()).string.trim().toLowerCase();
+}
+
+function getCurrentCursor() {
+	return getEditor().editor.getCursor();
+}
+
+function getNextLine() {
+	return $(getLines()[getCurrentCursor().line+1]);
+}
+
+function getLines() {
+	return getEditorDiv().find('.CodeMirror-lines div div div pre');
 }
 
 // Récupération de la doc
@@ -233,7 +245,7 @@ function leekWarsUpdateDoc() {
 	var aiName = getIAName();
 	IA_FUNCTIONS = [];
 
-	var linesOfCode = getEditorDiv().find('.CodeMirror-lines div div div pre');
+	var linesOfCode = getLines();
 
 	var currentDoc = null;
 	var endOfDocLine = null;
@@ -414,25 +426,33 @@ function leekWarsUpdateToolTips() {
 	var els = getEditorDiv().find("."+LEEKWARS_FONCTION_CLASS);
 	for(var index=0;index<els.length;index++) {
 		var el = $(els[index]);
+		var custom = el.attr("custom")=="yes";
 		var doc = getDocumentation(el.text());
-		if(doc) {
+		if(!custom && doc) {
+			el.attr("custom","yes");
+			el.on('mouseenter',showDetailDialog);
+			el.on('mouseleave',hideDetailDialog);		
+		} else if(custom && !doc) {
+			el.attr("custom","no");
 			el.off('mouseenter');
 			el.off('mouseleave');
-			el.on('mouseenter',showDetailDialog);
-			el.on('mouseleave',hideDetailDialog);
-		}		
+		}
 	}
 	
 	els = getEditorDiv().find("."+LEEKWARS_VARIABLE_CLASS);
 	for(var index=0;index<els.length;index++) {
 		var el = $(els[index]);
+		var custom = el.attr("custom")=="yes";
 		var doc = getDocumentation(el.text());
-		if(doc) {
+		if(!custom && doc) {
+			el.attr("custom","yes");
+			el.on('mouseenter',showDetailDialog);
+			el.on('mouseleave',hideDetailDialog);		
+		} else if(custom && !doc) {
+			el.attr("custom","no");
 			el.off('mouseenter');
 			el.off('mouseleave');
-			el.on('mouseenter',showDetailDialog);
-			el.on('mouseleave',hideDetailDialog);
-		}		
+		}	
 	}
 }
 
@@ -455,7 +475,39 @@ function moveTooltip() {
 	}
 }
 
+function autoDoc() {
+	var nextLine = getNextLine();
+	
+	if(isFunctionDeclaration(nextLine)) {
+		var name = getFunctionDeclarationName(nextLine);
+		
+		var doc = getDocumentation(name);
+		
+		if(doc) {
+			var autoDoc = ["/**","/**\n","","<h3>Documentation</h3><br/>/**<br/>...<br/>*/"];
+			autoDoc[2] += "\n@level ";
+			autoDoc[2] += "\n@ops variables";
+			for(var index in doc.params) {
+				autoDoc[2] += "\n@param "+doc.params[index].name+" ";
+			}
+			autoDoc[2] += "\n@return ";
+			autoDoc[2] += "\n*/";		
+			AUTO_SHORTCUTS[AUTODOC_INDEX] = autoDoc;	
+			return;
+		}
+	
+	}
+	
+	AUTO_SHORTCUTS[AUTODOC_INDEX] = DEFAULT_AUTODOC;
+	
+	
+}
+
+AUTODOC_INDEX = AUTO_SHORTCUTS.length;
+DEFAULT_AUTODOC = ["/**","/**\n","\n*/","<h3>Documentation</h3><br/>/**<br/>...<br/>*/"];
+AUTO_SHORTCUTS[AUTODOC_INDEX] = DEFAULT_AUTODOC;
 
 setInterval(leekWarsUpdateDoc,2000);
 setInterval(leekwarsUpdateHintDetails,200);
 setInterval(moveTooltip,200);
+setInterval(autoDoc,100);
