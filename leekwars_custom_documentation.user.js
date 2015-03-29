@@ -658,8 +658,10 @@ $(document).keydown(function(e) {
 			var line = getLine(doc.line-1);
 			var topLine = getLine(Math.max(0,doc.line-15));
 			getEditor().editor.setCursor({"line":doc.line-1,"ch":0});
+			var topValue = $(line).offset().top;
 			window.scrollTo(0,$(topLine).offset().top);
-			window.scrollTo(0,$(line).offset().top);
+			window.scrollTo(0,topValue);
+			$("#page").scrollTop(topValue);
 		},500);
 		
 	
