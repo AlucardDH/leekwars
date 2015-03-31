@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.9.2
+// @version			0.9.3
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -14,7 +14,9 @@
 // @grant			none
 // ==/UserScript==
 
-var GM_LEEKWARS_STRORAGE_BASE = "leekwars.doc.";
+var LEEKWARS_STRORAGE_BASE = "leekwars.";
+var LEEKWARS_STRORAGE_DOC = LEEKWARS_STRORAGE_BASE+"doc.";
+var LEEKWARS_STRORAGE_AUTOLOAD = LEEKWARS_STRORAGE_BASE+"autoload";
 
 var LEEKWARS_DOC_START = "/**";
 var LEEKWARS_DOC_END = "*/";
@@ -46,12 +48,12 @@ function getDocumentation(name) {
 		DOCUMENTATION = {};
 	}
 	if(!DOCUMENTATION[name]) {
-		var jsonDoc = localStorage.getItem(GM_LEEKWARS_STRORAGE_BASE+name);
+		var jsonDoc = localStorage.getItem(LEEKWARS_STRORAGE_DOC+name);
 		if(jsonDoc!==null) {
             try {
                 DOCUMENTATION[name] = JSON.parse(jsonDoc);
             } catch(e) {
-                localStorage.setItem(GM_LEEKWARS_STRORAGE_BASE+name,null);
+                localStorage.setItem(LEEKWARS_STRORAGE_DOC+name,null);
 				DOCUMENTATION[name] = null;
             }
 			
@@ -65,7 +67,39 @@ function setDocumentation(doc) {
 		DOCUMENTATION = {};
 	}
 	DOCUMENTATION[doc.name] = doc;
-	localStorage.setItem(GM_LEEKWARS_STRORAGE_BASE+doc.name,JSON.stringify(doc));
+	localStorage.setItem(LEEKWARS_STRORAGE_DOC+doc.name,JSON.stringify(doc));
+}
+
+function isAutoloadIncludesEnabled() {
+	var value = localStorage.getItem(LEEKWARS_STRORAGE_AUTOLOAD);
+	if(value!=null) {
+		return eval(value);
+	} else {
+		return true;
+	}
+}
+
+function setAutoloadIncludes(enabled) {
+	localStorage.setItem(LEEKWARS_STRORAGE_AUTOLOAD,enabled);
+}
+
+// Settings
+
+function createSetting() {
+	var settings = $("#editor-settings-popup .content");
+	settings.append("<br/><br/>");
+	var checkbox = $('<input type="checkbox" id="setting-autoload">');
+	console.log("Autoload : "+isAutoloadIncludesEnabled());
+	if(isAutoloadIncludesEnabled()) {
+		checkbox.attr("checked","checked");
+	} else {
+		checkbox.removeAttr("checked");
+	}
+	checkbox.change(function() {
+		setAutoloadIncludes(this.checked);
+	});
+	settings.append(checkbox);
+	settings.append('<label for="setting-autoload">Chargement automatique des includes (pour l\'autocomplétion et la documentation)</label>');
 }
 
 // Formattage _________________________________________________________________________
@@ -274,15 +308,19 @@ function getCompleteIncludeList() {
 }
 
 UPDATING_DOC = false;
-UPDATING_ALL_STATUS = null;
 
 // Récupération de la doc
 function leekWarsUpdateDoc() {
-	if(UPDATING_DOC || UPDATING_ALL_STATUS!="DONE") {
+	if(UPDATING_DOC) {
 		return;
 	}
 	
 	UPDATING_DOC = true;
+	
+	if(isAutoloadIncludesEnabled()) {
+		var includes = getCompleteIncludeList();
+		reloadMissing(includes);
+	}
 	
 	leekWarsUpdateDocIa(current);
 	
@@ -296,41 +334,40 @@ function getIAList() {
 	return result;
 }
 
-UPDATING_ALL_STATUS_START_IA = null;
 
-function reloadMissing() {
-	if(!UPDATING_ALL_STATUS_START_IA) {
-		UPDATING_ALL_STATUS_START_IA = current;
+reloadSource = null;
+
+function reloadMissing(ids) {
+	if(!reloadSource) {
+		reloadSource = current;
 	}
 
 	var somethingMissing = false;
-	var ids = getIAList();
+	if(!ids) {
+		ids = getIAList();
+	}
 	for(var index=0;index<ids.length;index++) {
 		var id = ids[index];
 		var editor = editors[id];
-		current = id;
-		editor.load(true);
 		
 		if(!IA_LOADED[id]) {
+			current = id;
+			editor.load(true);
 			if(!editor.loaded || !leekWarsUpdateDocIa(id)) {
 				somethingMissing = true;
 			} else {
-				IA_LOADED[id];
+				IA_LOADED[id] = true;
 			}
 		}
 	}
+	
 	if(somethingMissing) {
 		setTimeout(reloadMissing,1000);
 	} else {
-		
-		current = UPDATING_ALL_STATUS_START_IA;
-		UPDATING_ALL_STATUS = "DONE";
-		setInterval(leekWarsUpdateDoc,500);
-		setInterval(leekwarsUpdateHintDetails,200);
-		setInterval(moveTooltip,200);
-		setInterval(autoDoc,100);
-		setInterval(checkCurrentIsShown,100);
+		current = reloadSource;
+		reloadSource = null;
 	}
+	
 }
 
 function checkCurrentIsShown() {
@@ -338,16 +375,6 @@ function checkCurrentIsShown() {
 	if(div.css("display")=="none") {
 		getEditor().show();
 	}
-}
-	
-function leekWarsUpdateAllDoc() {
-	if(UPDATING_ALL_STATUS=="IN PROGRESS" || UPDATING_ALL_STATUS=="DONE") {
-		return;
-	}
-	
-	UPDATING_ALL_STATUS = "IN PROGRESS";
-	
-	setTimeout(reloadMissing,1000);
 }
 
 function leekWarsUpdateDocIa(iaId) {
@@ -696,4 +723,10 @@ $(document).keydown(function(e) {
 	}
 });
 
-leekWarsUpdateAllDoc();
+createSetting();
+
+setInterval(leekWarsUpdateDoc,500);
+setInterval(leekwarsUpdateHintDetails,200);
+setInterval(moveTooltip,200);
+setInterval(autoDoc,100);
+setInterval(checkCurrentIsShown,100);
