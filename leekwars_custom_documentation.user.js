@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.9.3
+// @version			0.9.4
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -235,7 +235,11 @@ function getFunctionDeclarationParams(line) {
 	
 	var result = [];
 	for(var i=0;i<paramsElements.length;i++) {
-		result.push({name:$(paramsElements[i]).text()});
+		var nameParam = $(paramsElements[i]).text();
+		if(nameParam.indexOf("@")==0) {
+			nameParam = nameParam.substring(1);
+		}
+		result.push({name:nameParam});
 	}
 	return result;
 }
