@@ -7,8 +7,10 @@
 // @projectPage		https://github.com/AlucardDH/leekwars
 // @downloadURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_notification_coloration.user.js
 // @updateURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_notification_coloration.user.js
-// @match			http://leekwars.com*
-// @include        	http://leekwars.com*
+// @match			http://leekwars.com
+// @match			http://leekwars.com/*
+// @include        	http://leekwars.com
+// @include        	http://leekwars.com/*
 // @grant			GM_addStyle
 // @grant			GM_getValue
 // @grant			GM_setValue
