@@ -30,6 +30,8 @@ GM_addStyle('.win{background-color: #B8FFB3;}\
 
 var GM_STORAGE = "leekwars.notifications.";
 
+var PROCESS_DELAY = 1;
+
 var NOTIFICATION_TYPE_FIGHT = "FIGHT";
 var NOTIFICATION_TYPE_FARMER = "FARMER";
 var NOTIFICATION_TYPE_LEEK = "LEEK";
@@ -342,7 +344,7 @@ function processNext() {
 		if(notificationData) {
 			applyNotificationColor(notificationData);
 			processing = false;
-			setTimeout(processNext,10);
+			setTimeout(processNext,PROCESS_DELAY);
 			return;
 		}
 		
@@ -402,7 +404,7 @@ function processNext() {
 				applyNotificationColor(notificationData);
 				
 				processing = false;
-				setTimeout(processNext,10);
+				setTimeout(processNext,PROCESS_DELAY);
 				
 			});
 			
@@ -416,7 +418,7 @@ function processNext() {
 			applyNotificationColor(notificationData);
 			
 			processing = false;
-			setTimeout(processNext,10);
+			setTimeout(processNext,PROCESS_DELAY);
 			return;
 		}
 		
@@ -436,7 +438,7 @@ function processNext() {
 				}
 				
 				processing = false;
-				setTimeout(processNext,10);
+				setTimeout(processNext,PROCESS_DELAY);
 
 			});
 			
@@ -446,7 +448,7 @@ function processNext() {
 
 		
 		processing = false;
-		setTimeout(processNext,10);
+		setTimeout(processNext,PROCESS_DELAY);
 		
 	}
 	
