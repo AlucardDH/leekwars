@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.2
+// @version			0.3
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -11,6 +11,7 @@
 // @match			http://leekwars.com/*
 // @include        	http://leekwars.com
 // @include        	http://leekwars.com/*
+// @require 		http://leekwars.com/static/lib/jquery-2.1.1.min.js
 // @grant			GM_addStyle
 // @grant			GM_getValue
 // @grant			GM_setValue
@@ -96,7 +97,7 @@ function setNotification(notification) {
 	GM_setValue(GM_STORAGE+notification.id,JSON.stringify(notification));
 }
 
-ME = null;
+var ME = null;
 var ME_LOADING = false;
 
 function arrayIntersect(a, b) {
@@ -154,15 +155,14 @@ function getDataLoarder() {
 }
 
 function getMyInfos() {
+
 	if(ME===null && !ME_LOADING) {
 		ME_LOADING = true,
 		$.post(URL_FARMER,function(data){
-			
-			
 			var $data = $(data);
 			ME = {};
-			ME.id = __FARMER_ID;
-			ME.name = __FARMER_NAME;
+			ME.id = unsafeWindow.__FARMER_ID;
+			ME.name = unsafeWindow.__FARMER_NAME;
 			ME.leeks = [];
 			ME.leeksIds = [];
 			var leekDivs = $data.find("#leeks .leek");
@@ -457,7 +457,6 @@ function processNext() {
 }
 
 function updateNotifications() {
-
 	if(getMyInfos()===null) {
 		setTimeout(updateNotifications,1000);
 	} else {
@@ -467,6 +466,7 @@ function updateNotifications() {
 			var notification = notifications[i];
 			toProcess.push(notification.id);
 		}
+		
 		processNext();
 	
 	}
