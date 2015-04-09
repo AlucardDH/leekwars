@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.9.4
+// @version			0.9.5
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -26,6 +26,7 @@ var LEEKWARS_KEYWORD_GLOBAL = "global";
 var LEEKWARS_KEYWORD_FUNCTION = "function";
 
 var LEEKWARS_FONCTION_CLASS = "cm-function";
+var LEEKWARS_FONCTION_LS_CLASS = "cm-lsfunc";
 var LEEKWARS_COMMENT_CLASS = "cm-comment";
 var LEEKWARS_VARIABLE_CLASS = "cm-variable";
 var LEEKWARS_DECLARATION_CLASS = "-declaration";
@@ -216,6 +217,22 @@ function docToCompletion(doc) {
 // Parsing ____________________________________________________________________________________________
 
 function isFunctionDeclaration(line) {
+
+	if(line.find("."+LEEKWARS_FONCTION_CLASS+LEEKWARS_DECLARATION_CLASS).length>0) {
+		var text = line.text();
+	
+		var firstParenthesis = text.indexOf("(");
+		var functionWord = text.indexOf(LEEKWARS_KEYWORD_FUNCTION);
+		if(firstParenthesis!=-1 && firstParenthesis<functionWord) {
+			return false;
+		} else {
+			return true;
+		}
+	} else {
+		return false;
+	}
+
+	
 	return line.find("."+LEEKWARS_FONCTION_CLASS+LEEKWARS_DECLARATION_CLASS).length>0;
 }
 
@@ -355,7 +372,7 @@ function reloadMissing(ids) {
 		var editor = editors[id];
 		
 		if(!IA_LOADED[id]) {
-			current = id;
+			unsafeWindow.current = id;
 			editor.load(true);
 			if(!editor.loaded || !leekWarsUpdateDocIa(id)) {
 				somethingMissing = true;
@@ -368,8 +385,9 @@ function reloadMissing(ids) {
 	if(somethingMissing) {
 		setTimeout(reloadMissing,1000);
 	} else {
-		current = reloadSource;
+		unsafeWindow.current = reloadSource;
 		reloadSource = null;
+		
 	}
 	
 }
@@ -406,7 +424,7 @@ function leekWarsUpdateDocIa(iaId) {
 				line.find("."+LEEKWARS_COMMENT_CLASS).css("color","#0086BC");
 			}
 				
-			var text = line.text();
+			var text = line.text().trim();
 			
 			if(text==LEEKWARS_DOC_START) {
 				isInDoc = true;
@@ -709,7 +727,7 @@ $(document).keydown(function(e) {
 		
 		if(doc.aiId!=current) {
 			getEditor(doc.aiId).show();
-			current = doc.aiId;
+			unsafeWindow.current = doc.aiId;
 		}
 		
 		setTimeout(function() {
