@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.9.5
+// @version			0.9.6
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -214,6 +214,14 @@ function docToCompletion(doc) {
 	return {name:docToCompletionName(doc),text:doc.name,type:doc.type,detail:docToString(doc),custom:true};
 }
 
+function setCurrent(newCurrent) {
+    try {
+        unsafeWindow.current = newCurrent;
+    } catch(e) {
+        current = newCurrent;
+    }
+}
+
 // Parsing ____________________________________________________________________________________________
 
 function isFunctionDeclaration(line) {
@@ -372,7 +380,7 @@ function reloadMissing(ids) {
 		var editor = editors[id];
 		
 		if(!IA_LOADED[id]) {
-			unsafeWindow.current = id;
+            setCurrent(id);
 			editor.load(true);
 			if(!editor.loaded || !leekWarsUpdateDocIa(id)) {
 				somethingMissing = true;
@@ -385,7 +393,7 @@ function reloadMissing(ids) {
 	if(somethingMissing) {
 		setTimeout(reloadMissing,1000);
 	} else {
-		unsafeWindow.current = reloadSource;
+		setCurrent(reloadSource);
 		reloadSource = null;
 		
 	}
@@ -727,7 +735,7 @@ $(document).keydown(function(e) {
 		
 		if(doc.aiId!=current) {
 			getEditor(doc.aiId).show();
-			unsafeWindow.current = doc.aiId;
+			setCurrent(doc.aiId);
 		}
 		
 		setTimeout(function() {
