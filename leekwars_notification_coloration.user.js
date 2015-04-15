@@ -22,7 +22,7 @@ var DATAMODEL_VERSION = "0.1";
 
 GM_addStyle('.win{background-color: #B8FFB3;}\
  .defeat{background-color: #FFB3AE;}\
- .draw{background-color: #FFFFFF;}\
+ .draw{background-color: #DCDCDC;}\
  .gold{background-color:#FFF0C6;}\
  a[href*=farmer] .notif {background-color:#FFF0C6;}\
  a[href*=leek] .notif {background-color:#FFE664;}\
