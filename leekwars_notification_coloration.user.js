@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.4
+// @version			0.5
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -343,6 +343,7 @@ function processNext() {
 	if(currentNotificationId) {
 		processing = true;
 		
+		
 		var notificationData = getNotification(currentNotificationId);
 		
 		if(notificationData) {
@@ -478,7 +479,7 @@ function updateNotifications() {
 }
 
 function updateNotificationsMenu() {
-	if(toProcess.length==0) {
+	if(toProcess.length==0 && $("#notifs").css("display")=="block") {
 		var notifications = getNotificationsMenu();
 		
 		for(var i=0;i<notifications.length;i++) {
@@ -494,4 +495,5 @@ checkCache();
 $(".notif[type=9]").addClass("gold");
 updateNotifications();
 
-setInterval(updateNotificationsMenu,1000);
+$("#notifs-button").click(function(){setTimeout(updateNotificationsMenu,1000);});
+//setInterval(updateNotificationsMenu,1000);
