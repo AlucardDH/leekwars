@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.6.1
+// @version			0.6.2
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -139,13 +139,13 @@ function styleToString(style) {
 
 function initStyles() {
 	DEFAULT_STYLES_NAMES.STYLE_TYPE_WIN = "Match gagn&eacute;";
-	DEFAULT_STYLES.STYLE_TYPE_WIN = {selector:".win",background:"#B8FFB3"};
+	DEFAULT_STYLES.STYLE_TYPE_WIN = {selector:".notif.win",background:"#B8FFB3"};
 	
 	DEFAULT_STYLES_NAMES.STYLE_TYPE_DRAW = "Match nul";
-	DEFAULT_STYLES.STYLE_TYPE_DRAW = {selector:".draw",background:"#DCDCDC"};
+	DEFAULT_STYLES.STYLE_TYPE_DRAW = {selector:".notif.draw",background:"#DCDCDC"};
 	
 	DEFAULT_STYLES_NAMES.STYLE_TYPE_DEFEAT = "Match perdu";
-	DEFAULT_STYLES.STYLE_TYPE_DEFEAT = {selector:".defeat",background:"#FFB3AE"};
+	DEFAULT_STYLES.STYLE_TYPE_DEFEAT = {selector:".notif.defeat",background:"#FFB3AE"};
 	
 	DEFAULT_STYLES_NAMES.STYLE_TYPE_TOURNAMENT_WIN = "Tournoi gagn&eacute;";
 	DEFAULT_STYLES.STYLE_TYPE_TOURNAMENT_WIN = {selector:".tournamentWin",jquerySelector:".notif[type=9]",background:"#FFF0C6"};
@@ -620,6 +620,17 @@ function initSettings() {
 		for(var styleType in DEFAULT_STYLES) {
 			settings.append(getStyleSettings(styleType));
 		}
+		
+		var reset = $('<input class="button" type="button" name="notifColor_reset" id="notifColor_reset" value="Reset"/>');
+		reset.click(function(){
+			for(var styleType in DEFAULT_STYLES) {
+				var styleId = GM_STORAGE+"style."+styleType;
+				GM_deleteValue(styleId);
+			}
+			location.reload();
+		});
+		
+		settings.append(reset);
 		
 		settings.append("<br/><br/>");
 		
