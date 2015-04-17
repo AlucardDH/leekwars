@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.5
+// @version			0.6
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -20,18 +20,19 @@
 // ==/UserScript==
 var DATAMODEL_VERSION = "0.1";
 
-GM_addStyle('.win{background-color: #B8FFB3;}\
- .defeat{background-color: #FFB3AE;}\
- .draw{background-color: #DCDCDC;}\
- .gold{background-color:#FFF0C6;}\
- a[href*=farmer] .notif {background-color:#FFF0C6;}\
- a[href*=leek] .notif {background-color:#FFE664;}\
- a .notif:hover {background-color:#FFFFFF;}\
- ');
-
 var GM_STORAGE = "leekwars.notifications.";
 
 var PROCESS_DELAY = 1;
+
+var DEFAULT_STYLES = {};
+var DEFAULT_STYLES_NAMES = {};
+
+var STYLE_TYPE_WIN = "win";
+var STYLE_TYPE_DRAW = "draw";
+var STYLE_TYPE_DEFEAT = "defeat";
+var STYLE_TYPE_TOURNAMENT_WIN = "tournamentWin";
+var STYLE_TYPE_ACHIEVEMENT = "achievement";
+var STYLE_TYPE_LEVEL_UP = "levelUp";
 
 var NOTIFICATION_TYPE_FIGHT = "FIGHT";
 var NOTIFICATION_TYPE_FARMER = "FARMER";
@@ -47,8 +48,8 @@ var NOTIFICATION_RESULT_DEFEAT = "DEFEAT";
 var RESULT_DEAD = "DEAD";
 var RESULT_ALIVE = "ALIVE";
 
-var TOURNAMENT_TEXT_16EME = "16ème de finale";
-var TOURNAMENT_TEXT_8EME = "8ème de finale";
+var TOURNAMENT_TEXT_16EME = "16&egrav;me de finale";
+var TOURNAMENT_TEXT_8EME = "8&egrav;me de finale";
 var TOURNAMENT_TEXT_QUART = "Quart de finale";
 var TOURNAMENT_TEXT_DEMI = "Demi finale";
 var TOURNAMENT_TEXT_FINALE = "Finale";
@@ -82,6 +83,92 @@ function checkCache() {
 		}
 		GM_setValue(GM_STORAGE+"version",DATAMODEL_VERSION);
 	}
+}
+
+function isIconOnly() {
+	var result = GM_getValue(GM_STORAGE+"param.iconOnly");
+	
+	if(result!=null) {
+		result = result=="true" ? true : false;
+	} else {
+		result = false;
+	}
+	
+	return result;
+}
+
+function setIconOnly(value) {
+	GM_setValue(GM_STORAGE+"param.iconOnly",""+value);
+}
+
+function getStyle(styleType) {
+	var styleId = GM_STORAGE+"style."+styleType;
+	var style = GM_getValue(styleId);
+	if(style) {
+		return JSON.parse(style);
+	} else {
+		return DEFAULT_STYLES[styleType];
+	}
+}
+
+function setStyle(styleType,style) {
+	var styleId = GM_STORAGE+"style."+styleType;
+	if(style) {
+		GM_setValue(styleId,JSON.stringify(style));
+	} else {
+		GM_deleteValue(styleId);
+	}
+}
+ 
+function styleToString(style) {
+	var result = style.selector;
+	if(isIconOnly()) {
+		result += " img";
+	}
+	result += "{";
+	for(var property in style) {
+		if(property.indexOf("elector")<0) {	
+			result += property+":"+style[property]+";";
+		}
+		
+	}
+	result += "}";
+
+	return result;
+}
+
+function initStyles() {
+	DEFAULT_STYLES_NAMES.STYLE_TYPE_WIN = "Match gagn&eacute;";
+	DEFAULT_STYLES.STYLE_TYPE_WIN = {selector:".win",background:"#B8FFB3"};
+	
+	DEFAULT_STYLES_NAMES.STYLE_TYPE_DRAW = "Match nul";
+	DEFAULT_STYLES.STYLE_TYPE_DRAW = {selector:".draw",background:"#DCDCDC"};
+	
+	DEFAULT_STYLES_NAMES.STYLE_TYPE_DEFEAT = "Match perdu";
+	DEFAULT_STYLES.STYLE_TYPE_DEFEAT = {selector:".defeat",background:"#FFB3AE"};
+	
+	DEFAULT_STYLES_NAMES.STYLE_TYPE_TOURNAMENT_WIN = "Tournoi gagn&eacute;";
+	DEFAULT_STYLES.STYLE_TYPE_TOURNAMENT_WIN = {selector:".tournamentWin",jquerySelector:".notif[type=9]",background:"#FFF0C6"};
+	
+	DEFAULT_STYLES_NAMES.STYLE_TYPE_ACHIEVEMENT = "Succès d&eacute;bloqu&eacute;";
+	DEFAULT_STYLES.STYLE_TYPE_ACHIEVEMENT = {selector:"a[href*=farmer] .notif",background:"#FFF0C6"};
+	
+	DEFAULT_STYLES_NAMES.STYLE_TYPE_LEVEL_UP = "Mont&eacute;e de niveau";
+	DEFAULT_STYLES.STYLE_TYPE_LEVEL_UP = {selector:"a[href*=leek] .notif",background:"#FFE664"};
+	
+	for(var styleType in DEFAULT_STYLES) {
+		var style = getStyle(styleType);
+		GM_addStyle(styleToString(style));
+		if(style.jquerySelector) {
+			$(style.jquerySelector).addClass(style.selector.replace(".",""));
+		}
+	}
+	
+	if(isIconOnly()) {
+		GM_addStyle('.notif img{margin-right:6px;}');
+	}
+	
+	GM_addStyle('a .notif:hover {background-color:#FFFFFF;}');
 }
 
 function getNotification(id) {
@@ -309,7 +396,7 @@ function applyNotificationColor(notificationData) {
 	if(notificationData.type==NOTIFICATION_TYPE_FIGHT || notificationData.type==NOTIFICATION_TYPE_TOURNAMENT) {
 	
 		if(notificationData.result==NOTIFICATION_RESULT_DEFEAT) {
-			// Défaite
+			// D&eacute;faite
 			notifPage.addClass("defeat");
 			notifMenu.addClass("defeat");
 		} else if(notificationData.result==NOTIFICATION_RESULT_WIN) {
@@ -366,7 +453,7 @@ function processNext() {
 				var leeks = getLeeks(getDataLoarder());
 				
 				if(farmers) {
-					// Bataille d'éleveur
+					// Bataille d'&eacute;leveur
 					
 					var other = farmers[0]==ME.id ? farmers[1] : farmers[0];
 					
@@ -374,7 +461,7 @@ function processNext() {
 					var otherResult = getFarmerResult(getDataLoarder(),other);
 					
 					if(myResult==RESULT_DEAD) {
-						// Défaite
+						// D&eacute;faite
 						notificationData.result = NOTIFICATION_RESULT_DEFEAT;
 					} else if(otherResult==RESULT_DEAD) {
 						// Victoire
@@ -393,7 +480,7 @@ function processNext() {
 						var otherResult = getLeekResult(getDataLoarder(),other);
 						
 						if(myResult==RESULT_DEAD) {
-							// Défaite
+							// D&eacute;faite
 							notificationData.result = NOTIFICATION_RESULT_DEFEAT;
 						} else if(otherResult==RESULT_DEAD) {
 							// Victoire
@@ -491,8 +578,60 @@ function updateNotificationsMenu() {
 	}
 }
 
+function getStyleSettings(styleType) {
+	var style = getStyle(styleType);
+	
+	var result = $('<div></div>');
+	var backgroundColor = $('<input type="color" name="'+styleType+'_background" id="'+styleType+'_background" value="'+style.background+'"/>');
+	backgroundColor.change(function() {
+		var currentStyle = getStyle(styleType);
+		currentStyle.background = this.value;
+		setStyle(styleType,currentStyle);
+	});
+	result.append(backgroundColor);
+	result.append(' <label for="'+styleType+'_background">'+DEFAULT_STYLES_NAMES[styleType]+'</label>');
+	//result.append("<br/>");
+	
+	//result.append(backgroundColor);
+	return result;
+}
+
+function initSettings() {
+	var settingsContainer = $("#settings-container");
+	if(settingsContainer.length>0) {
+		var settings = $('<div id="#notifications-coloration-settings"><h2>Notifications Coloration</h2><br/></div>');
+		
+	// Icons only
+		
+		var checkboxIconOnly = $('<input type="checkbox" name="notifColor_iconOnly" id="notifColor_iconOnly"/>');
+		if(isIconOnly()) {
+			checkboxIconOnly.attr("checked","checked");
+		} else {
+			checkboxIconOnly.removeAttr("checked");
+		}
+
+		checkboxIconOnly.change(function() {
+			setIconOnly(this.checked);
+		});
+		settings.append(checkboxIconOnly);
+		settings.append('<label for="notifColor_iconOnly">Colorer uniquement les ic&ocirc;nes</label>');
+		settings.append("<br/><br/><h3>Couleurs des notifications</h3>");
+		
+		for(var styleType in DEFAULT_STYLES) {
+			settings.append(getStyleSettings(styleType));
+		}
+		
+		settings.append("<br/><br/>");
+		
+		settingsContainer.prepend(settings);
+	}
+}
+
 checkCache();
-$(".notif[type=9]").addClass("gold");
+initStyles();
+initSettings();
+
+//$(".notif[type=9]").addClass("gold");
 updateNotifications();
 
 $("#notifs-button").click(function(){setTimeout(updateNotificationsMenu,1000);});
