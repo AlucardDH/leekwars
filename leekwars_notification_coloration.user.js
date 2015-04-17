@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.6
+// @version			0.6.1
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -581,8 +581,8 @@ function updateNotificationsMenu() {
 function getStyleSettings(styleType) {
 	var style = getStyle(styleType);
 	
-	var result = $('<div></div>');
-	var backgroundColor = $('<input type="color" name="'+styleType+'_background" id="'+styleType+'_background" value="'+style.background+'"/>');
+	var result = $('<div style="margin:4px 0;"></div>');
+	var backgroundColor = $('<input class="card" type="color" name="'+styleType+'_background" id="'+styleType+'_background" value="'+style.background+'"/>');
 	backgroundColor.change(function() {
 		var currentStyle = getStyle(styleType);
 		currentStyle.background = this.value;
