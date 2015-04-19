@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.6.2
+// @version			0.6.3
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -48,8 +48,8 @@ var NOTIFICATION_RESULT_DEFEAT = "DEFEAT";
 var RESULT_DEAD = "DEAD";
 var RESULT_ALIVE = "ALIVE";
 
-var TOURNAMENT_TEXT_16EME = "16&egrav;me de finale";
-var TOURNAMENT_TEXT_8EME = "8&egrav;me de finale";
+var TOURNAMENT_TEXT_16EME = "16ème de finale";
+var TOURNAMENT_TEXT_8EME = "8ème de finale";
 var TOURNAMENT_TEXT_QUART = "Quart de finale";
 var TOURNAMENT_TEXT_DEMI = "Demi finale";
 var TOURNAMENT_TEXT_FINALE = "Finale";
@@ -429,7 +429,6 @@ function processNext() {
 	var currentNotificationId  = toProcess.shift();
 	if(currentNotificationId) {
 		processing = true;
-		
 		
 		var notificationData = getNotification(currentNotificationId);
 		
