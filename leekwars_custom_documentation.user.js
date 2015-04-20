@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.9.6
+// @version			0.10
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -11,7 +11,7 @@
 // @match			http://leekwars.com/editor/*
 // @include        	http://leekwars.com/editor
 // @include        	http://leekwars.com/editor/*
-// @grant			none
+// @grant			GM_addStyle
 // ==/UserScript==
 
 var LEEKWARS_STRORAGE_BASE = "leekwars.";
@@ -286,7 +286,9 @@ function getEditorDiv(iaId) {
 }
 
 function getIAName(iaId) {
-	return getEditor(iaId).name;
+	//console.log("getIAName("+iaId+")");
+	var editor = getEditor(iaId);
+	return editor ? editor.name : "Not found";
 }
 
 function getCurrentToken() {
@@ -354,6 +356,137 @@ function leekWarsUpdateDoc() {
 	leekWarsUpdateDocIa(current);
 	
 	UPDATING_DOC = false;
+}
+
+// ___________________________________________________________________________________________Search usages
+
+function buildLineUsage(ia,lineNumber,lineText) {
+	return {"ia":ia,"line":lineNumber,"text":lineText};
+}
+
+function searchUsageFromIA(ia,functionName) {
+	var result = [];
+	//console.log("searchUsageFromIA("+ia+","+functionName+")");
+	
+	var linesOfCode = getLines(ia);
+	for(var lineNumber=0;lineNumber<linesOfCode.length;lineNumber++) {
+
+		var variables = $(linesOfCode[lineNumber]).find("."+LEEKWARS_VARIABLE_CLASS);
+		var lineOk = false;
+		if(variables.length>0) {
+			for(var varNumber=0;varNumber<variables.length;varNumber++) {
+				if($(variables[varNumber]).text()==functionName) {
+					lineOk = true;
+					break;
+				}
+			}
+		}
+		
+		if(!lineOk) {
+			var lsFunctions = $(linesOfCode[lineNumber]).find("."+LEEKWARS_FONCTION_LS_CLASS);
+			var lineOk = false;
+			if(lsFunctions.length>0) {
+				for(var varNumber=0;varNumber<lsFunctions.length;varNumber++) {
+					if($(lsFunctions[varNumber]).text()==functionName) {
+						lineOk = true;
+						break;
+					}
+				}
+			}
+		}
+		
+		
+		if(lineOk) {
+			var line = $(linesOfCode[lineNumber]).text();
+			result.push(buildLineUsage(ia,lineNumber,line));
+		}
+		
+	}
+	//console.log(result);
+	return result;
+}
+
+function searchUsage(functionName) {
+	var result = [];
+	
+	var ias = getIAList();
+	for(var iaIndex=0;iaIndex<ias.length;iaIndex++) {
+		var ia = ias[iaIndex];
+		var resultIa = searchUsageFromIA(ia,functionName);
+		if(resultIa.length>0) {
+			result[ia] = resultIa;
+		}
+		
+	}
+	
+	var title = $('<div class="title" title="Cliquer pour masquer">'+functionName+'</div>');
+	title.click(function(){getUsagesTooltip().hide()});
+	getUsagesTooltip().html(title);
+	getUsagesTooltip().width("auto");
+	var content = $('<div class="content"></div>');
+	for(var ia in result) {
+		content.append(getUsageIAElement(ia,result[ia]));
+	}
+	getUsagesTooltip().append(content);
+	
+	//getUsagesTooltip().html(JSON.stringify(result));
+	getUsagesTooltip().show();
+	$("#tooltipUsages .content").height($("#tooltipUsages").height()-$("#tooltipUsages .title").height()-14);
+	getUsagesTooltip().width(getUsagesTooltip().width()+20);
+	return result;
+}
+
+GM_addStyle('#tooltipUsages {background:#F2F2F2;color:"#666";border-bottom:15px solid #D1D1D1;border-left:15px solid #D1D1D1;z-index:1000;}');
+GM_addStyle('#tooltipUsages .title{cursor:pointer;background:#D1D1D1;color:"black";padding:7px 15px 7px 0px;text-align:center;text-overflow: ellipsis;}');
+GM_addStyle('#tooltipUsages .content{overflow-y:auto;overflow-x: hidden;}');
+GM_addStyle('#tooltipUsages .ia{background:#F8F8F8;color:"black";padding:7px;}');
+GM_addStyle('#tooltipUsages .line{cursor:pointer;display:block;padding:3px;color:#555;}');
+GM_addStyle('#tooltipUsages .line:hover{color:black;background:white;}');
+
+var tooltipUsages = null;
+function getUsagesTooltip() {
+	if(tooltipUsages==null) {
+		tooltipUsages = $('<div id="tooltipUsages"></div>');
+		var pageWrapper = $("#page-wrapper");
+		var position = pageWrapper.offset();
+		
+		var left = position.left+pageWrapper.width()-15;
+		//var top = position.top;
+		//var bottom = $(window).height();
+		var right = $(document).width();
+		//var height = bottom-top-81;
+		var width = right-left;
+		
+		tooltipUsages.css("position","fixed");
+		tooltipUsages.css("top","120px");
+		//tooltipUsages.css("left",left);
+		//tooltipUsages.css("width",width);
+		tooltipUsages.css("right","0px");
+		tooltipUsages.css("bottom","81px");
+		$("body").append(tooltipUsages);
+	}
+	
+	return tooltipUsages;
+}
+
+function getUsageIAElement(ia,usages) {
+	var result = $('<div></div>');
+	var title = replaceAll(" ","&nbsp;",getIAName(ia)+' ('+usages.length+')');
+	result.append('<div class="ia">'+title+'</div>');
+	for(var usageIndex=0;usageIndex<usages.length;usageIndex++) {
+		result.append(getUsageElement(usages[usageIndex]));
+	}
+	return result;
+}
+
+function getUsageElement(usage) {
+	var result = $('<a class="line" title="'+replaceAll('"','&quot;',usage.text)+'">Ligne '+(usage.line+1)+'</a>');
+	result.click(function(){gotoLine(usage.ia,usage.line);});
+	return result;
+}
+
+function replaceAll(find, replace, str) {
+	return str.replace(new RegExp(find, 'g'), replace);
 }
 
 // _______________________________________________________________________________________Récupération de la doc
@@ -710,6 +843,34 @@ function autoDoc() {
 	
 }
 
+function gotoLine(ia,line) {
+	if(ia!=current) {
+		getEditor(ia).show();
+		setCurrent(ia);
+	}
+	
+	setTimeout(function() {
+		getEditor().editor.setCursor({"line":line,"ch":0});
+		if($("#page").css("overflow-y")=="scroll") {
+			var container = $("#page"),
+				scrollTo = $(getLine(line));
+
+			container.scrollTop(
+				scrollTo.offset().top - container.offset().top + container.scrollTop()
+			);
+		} else {
+			var container = $(document),
+				scrollTo = $(getLine(line));
+
+			container.scrollTop(scrollTo.offset().top);
+		}
+		
+		//console.log(scrollTo.offset());
+		//$("#page").scrollTop(scrollTo.offset().top);
+	},500);
+
+}
+
 AUTODOC_INDEX = AUTO_SHORTCUTS.length;
 DEFAULT_AUTODOC = ["/**","/**\n","\n*/","<h3>Documentation</h3><br/>/**<br/>...<br/>*/"];
 AUTO_SHORTCUTS[AUTODOC_INDEX] = DEFAULT_AUTODOC;
@@ -733,29 +894,27 @@ $(document).keydown(function(e) {
 		hideDetailDialog();
 		hideHintDialog();
 		
-		if(doc.aiId!=current) {
-			getEditor(doc.aiId).show();
-			setCurrent(doc.aiId);
+		gotoLine(doc.aiId,doc.line-1);
+	
+		e.preventDefault();
+	}
+	
+	// Ctrl-Shift-H : go to definition
+	if (e.shiftKey && e.ctrlKey && e.keyCode == 72) {
+		var token = getCurrentToken();
+		if(token==null) {
+			return;
 		}
 		
-		setTimeout(function() {
-			var line = getLine(doc.line-1);
-			var topLine = getLine(Math.max(0,doc.line-15));
-			getEditor().editor.setCursor({"line":doc.line-1,"ch":0});
-			getEditor().editor.up();
-			getEditor().editor.down();
-			getEditor().editor.down();
-			getEditor().editor.setCursor({"line":doc.line-1,"ch":0});
-		},500);
+		searchUsage(token.string.trim());
 		
-	
 		e.preventDefault();
 	}
 });
 
 createSetting();
 
-setInterval(leekWarsUpdateDoc,500);
+setInterval(leekWarsUpdateDoc,1000);
 setInterval(leekwarsUpdateHintDetails,200);
 setInterval(moveTooltip,200);
 setInterval(autoDoc,100);
