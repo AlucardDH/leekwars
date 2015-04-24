@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.6.3
+// @version			0.6.4
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -361,9 +361,7 @@ function getTournamentMatchResult(data,turn) {
 	}
 	var looser = data.find("."+TOURNAMENT_CLASS_MY_PLAYER+"[width="+TOURNAMENT_TURN_SIZE[turn]+"]."+TOURNAMENT_CLASS_LOOSER).length>0;
 	
-	if(!looser) {
-		return NOTIFICATION_RESULT_WIN;
-	}
+	
 	
 	wantedMatch = $(wantedMatch[0]);
 	var ids = REGEX_TOURNAMENT_ID.exec(wantedMatch[0].id);
@@ -374,7 +372,15 @@ function getTournamentMatchResult(data,turn) {
 	
 	var enemyLooser = data.find("#"+baseId+enemyId+"."+TOURNAMENT_CLASS_LOOSER).length>0;
 	
-	return enemyLooser ? NOTIFICATION_RESULT_DRAW : NOTIFICATION_RESULT_DEFEAT;
+	if(!looser && enemyLooser) {
+		return NOTIFICATION_RESULT_WIN;
+	} else if(looser && enemyLooser) {
+		return NOTIFICATION_RESULT_DRAW;
+	} else if(looser && !enemyLooser) {
+		return NOTIFICATION_RESULT_DEFEAT;
+	} else {
+		return null;
+	}
 }
 
 /**
