@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.6.4
+// @version			0.6.5
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -18,7 +18,7 @@
 // @grant			GM_deleteValue
 // @grant			GM_listValues
 // ==/UserScript==
-var DATAMODEL_VERSION = "0.1";
+var DATAMODEL_VERSION = "0.2";
 
 var GM_STORAGE = "leekwars.notifications.";
 
@@ -72,6 +72,9 @@ var URL_REPORT = "http://leekwars.com/report/";
 var URL_FARMER = "http://leekwars.com/farmer";
 var URL_LEEK = "http://leekwars.com/leek";
 var URL_TOURNAMENT = "http://leekwars.com/tournament/";
+
+var ME = null;
+var ME_LOADING = false;
 
 function checkCache() {
 	
@@ -183,9 +186,6 @@ function getNotification(id) {
 function setNotification(notification) {
 	GM_setValue(GM_STORAGE+notification.id,JSON.stringify(notification));
 }
-
-var ME = null;
-var ME_LOADING = false;
 
 function arrayIntersect(a, b) {
     return $.grep(a, function(i){
@@ -354,16 +354,47 @@ function getTournamentTurn(data) {
 	return null;
 }
 
-function getTournamentMatchResult(data,turn) {
+function getTournamentLeekId(data) {
+	var text = data.text;
+	if(text.indexOf("Votre match")!=-1) {
+		// Match éleveur
+		return null;
+	}
+	
+	var name = text.substring(0,text.indexOf(" "));
+	for(var i=0;i<ME.leeks.length;i++) {
+		var leek = ME.leeks[i];
+		if(leek.name==name) {
+			return leek.id;
+		}
+	}
+	
+	return null;
+}
+
+function getTournamentMatchResult(data,leekId,turn) {
 	var wantedMatch = data.find("."+TOURNAMENT_CLASS_MY_PLAYER+"[width="+TOURNAMENT_TURN_SIZE[turn]+"]");
 	if(wantedMatch.length==0) {
 		return null;
 	}
-	var looser = data.find("."+TOURNAMENT_CLASS_MY_PLAYER+"[width="+TOURNAMENT_TURN_SIZE[turn]+"]."+TOURNAMENT_CLASS_LOOSER).length>0;
+	
+	var wantedIndex = 0;
+
+	if(wantedMatch.length>1) {	
+		// Plusieurs des mes poireaux combattent dans ce tournoi
+		for(var indexMatch=0;indexMatch<wantedMatch.length;indexMatch++) {
+			var matchLeekId = $(wantedMatch[indexMatch]).parent().attr("xlink:href");
+			if(matchLeekId.indexOf(leekId)) {
+				wantedIndex = indexMatch;
+			}
+		}
+	}
+	
+	wantedMatch = $(wantedMatch[wantedIndex]);
+	
+	var looser = wantedMatch.parent().find("."+TOURNAMENT_CLASS_MY_PLAYER+"[width="+TOURNAMENT_TURN_SIZE[turn]+"]."+TOURNAMENT_CLASS_LOOSER).length>0;
 	
 	
-	
-	wantedMatch = $(wantedMatch[0]);
 	var ids = REGEX_TOURNAMENT_ID.exec(wantedMatch[0].id);
 	var baseId = ids[1];
 	var numberId = parseInt(ids[2]);
@@ -522,12 +553,13 @@ function processNext() {
 		var tournament = getTournament(notification);
 		if(tournament!=null) {
 			var turn = getTournamentTurn(notification);
+			var leekId = getTournamentLeekId(notification);
 			
 			$.post(URL_TOURNAMENT+tournament, function(data) {
 				var notificationData = {"id":currentNotificationId,"type":NOTIFICATION_TYPE_TOURNAMENT};
 				getDataLoarder().html($(data).find("#tournament"));
 				
-				var result = getTournamentMatchResult(getDataLoarder(),turn);
+				var result = getTournamentMatchResult(getDataLoarder(),leekId,turn);
 				if(result!=null) {
 					notificationData.result = result;
 					setNotification(notificationData);
