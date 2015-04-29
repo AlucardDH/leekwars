@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.10
+// @version			0.10.1
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -297,6 +297,10 @@ function getCurrentToken() {
 
 function getCurrentCursor() {
 	return getEditor().editor.getCursor();
+}
+
+function getCurrentLine() {
+	return $(getLines()[getCurrentCursor().line]);
 }
 
 function getNextLine() {
@@ -816,8 +820,10 @@ function moveTooltip() {
 }
 
 function autoDoc() {
+	var currentLine = getCurrentLine();
 	var nextLine = getNextLine();
-	
+	//console.log(nextLine.text());
+		
 	if(isFunctionDeclaration(nextLine)) {
 		var name = getFunctionDeclarationName(nextLine);
 		
@@ -836,11 +842,11 @@ function autoDoc() {
 			return;
 		}
 	
-	}
-	
-	AUTO_SHORTCUTS[AUTODOC_INDEX] = DEFAULT_AUTODOC;
-	
-	
+	} else if("/**".indexOf(currentLine.text())==0) {
+		// nothing to do
+	} else {
+		AUTO_SHORTCUTS[AUTODOC_INDEX] = DEFAULT_AUTODOC;
+	}	
 }
 
 function gotoLine(ia,line) {
@@ -874,6 +880,14 @@ function gotoLine(ia,line) {
 AUTODOC_INDEX = AUTO_SHORTCUTS.length;
 DEFAULT_AUTODOC = ["/**","/**\n","\n*/","<h3>Documentation</h3><br/>/**<br/>...<br/>*/"];
 AUTO_SHORTCUTS[AUTODOC_INDEX] = DEFAULT_AUTODOC;
+
+CONTINUE_INDEX = AUTO_SHORTCUTS.length;
+CONTINUE_COMPLETION = ["continue","continue;","","<h3>Elément suivant de la boucle</h3><br/>continue;"];
+AUTO_SHORTCUTS[CONTINUE_INDEX] = CONTINUE_COMPLETION;
+
+BREAK_INDEX = AUTO_SHORTCUTS.length;
+BREAK_COMPLETION = ["break","break;","","<h3>Quitter la boucle</h3><br/>break;"];
+AUTO_SHORTCUTS[BREAK_INDEX] = BREAK_COMPLETION;
 
 $(document).keydown(function(e) {
 	if (current == null) {
