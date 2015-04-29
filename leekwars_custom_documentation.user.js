@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.10.1
+// @version			0.10.2
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -888,6 +888,10 @@ AUTO_SHORTCUTS[CONTINUE_INDEX] = CONTINUE_COMPLETION;
 BREAK_INDEX = AUTO_SHORTCUTS.length;
 BREAK_COMPLETION = ["break","break;","","<h3>Quitter la boucle</h3><br/>break;"];
 AUTO_SHORTCUTS[BREAK_INDEX] = BREAK_COMPLETION;
+
+RETURN_INDEX = AUTO_SHORTCUTS.length;
+RETURN_COMPLETION = ["return","return",";","<h3>Retourner un résultat</h3><br/>return <val>;"];
+AUTO_SHORTCUTS[RETURN_INDEX] = RETURN_COMPLETION;
 
 $(document).keydown(function(e) {
 	if (current == null) {
