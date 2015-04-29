@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.6.5
+// @version			0.6.6
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -18,7 +18,7 @@
 // @grant			GM_deleteValue
 // @grant			GM_listValues
 // ==/UserScript==
-var DATAMODEL_VERSION = "0.2";
+var DATAMODEL_VERSION = "0.3";
 
 var GM_STORAGE = "leekwars.notifications.";
 
@@ -384,7 +384,7 @@ function getTournamentMatchResult(data,leekId,turn) {
 		// Plusieurs des mes poireaux combattent dans ce tournoi
 		for(var indexMatch=0;indexMatch<wantedMatch.length;indexMatch++) {
 			var matchLeekId = $(wantedMatch[indexMatch]).parent().attr("xlink:href");
-			if(matchLeekId.indexOf(leekId)) {
+			if(matchLeekId.indexOf(leekId)>-1) {
 				wantedIndex = indexMatch;
 			}
 		}
