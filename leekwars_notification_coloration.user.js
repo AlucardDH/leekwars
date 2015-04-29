@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.6.6
+// @version			0.7
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -70,6 +70,7 @@ var REGEX_FORUM = /.*\/forum\/(.*)/i;
 
 var URL_REPORT = "http://leekwars.com/report/";
 var URL_FARMER = "http://leekwars.com/farmer";
+var URL_TEAM = "http://leekwars.com/team/";
 var URL_LEEK = "http://leekwars.com/leek";
 var URL_TOURNAMENT = "http://leekwars.com/tournament/";
 
@@ -267,7 +268,32 @@ function getMyInfos() {
 				ME.leeks.push({"id":id,"name":name});
 				ME.leeksIds.push(id);
 			}
-			ME_LOADING = false;
+			var teamHref = $data.find("#team a").attr("href");
+			var teamId = REGEX_TEAM.exec(teamHref);
+			ME.teamId = teamId && teamId[1] ? teamId[1] : null;
+			
+			if(ME.teamId) {
+				// todo : load teams
+				$.post(URL_TEAM+ME.teamId,function(data){
+					var $data = $(data);
+
+					for(var leekIndex=0;leekIndex<ME.leeks.length;leekIndex++) {
+						var leekInfos = ME.leeks[leekIndex];
+						
+						var compoDiv = $data.find(".compo:contains("+leekInfos.name+")");
+						leekInfos.compoId = compoDiv.attr("compo");
+						leekInfos.compoTitle = compoDiv.find(".compo-title").text();
+					}
+					
+					console.log(ME);
+					ME_LOADING = false;
+					
+				});
+			} else {
+				console.log(ME);
+				ME_LOADING = false;
+			}
+			
 		});
 	}
 	
@@ -276,6 +302,20 @@ function getMyInfos() {
 	}
 	
 	return ME;
+}
+
+function getTeams(data) {
+	var teamDivs = data.find('.report a[href*=team]');
+	if(teamDivs.length===0) {
+		return null;
+	}	
+	var result = [];
+	for(var i=0;i<teamDivs.length;i++) {
+		var teamDiv = teamDivs[i];
+		result.push(teamDiv.href.substring(URL_TEAM.length));
+	}
+	
+	return result;
 }
 
 function getFarmers(data) {
@@ -292,25 +332,6 @@ function getFarmers(data) {
 	return result;
 }
 
-function getFarmerResult(data,farmerId) {
-	var report = data.find('.report a[href*='+farmerId+']').parent().parent();
-	if(report.length===0) {
-		return null;
-	}
-	
-	var alive = report.html().indexOf("alive")>-1;
-	if(alive) {
-		return RESULT_ALIVE;
-	}
-	
-	var dead = report.html().indexOf("dead")>-1;
-	if(dead) {
-		return RESULT_DEAD;
-	}
-	
-	return null;
-}
-
 function getLeeks(data) {
 	var leekDivs = data.find('.report a[href*=leek]');
 	if(leekDivs.length===0) {
@@ -325,8 +346,8 @@ function getLeeks(data) {
 	return result;
 }
 
-function getLeekResult(data,leekId) {
-	var report = data.find('.report a[href*='+leekId+']').parent().parent();
+function getFightResult(data,entityId) {
+	var report = data.find('.report a[href*='+entityId+']').parent().parent();
 	if(report.length===0) {
 		return null;
 	}
@@ -487,45 +508,45 @@ function processNext() {
 				
 				var farmers = getFarmers(getDataLoarder());
 				var leeks = getLeeks(getDataLoarder());
+				var teams = getTeams(getDataLoarder());
 				
-				if(farmers) {
-					// Bataille d'&eacute;leveur
+				var myResult = null;
+				var otherResult = null;
+				
+				if(teams) {
+					// Bataille d'équipe
+					var other = teams[0]==ME.teamId ? teams[1] : teams[0];
 					
+					myResult = getFightResult(getDataLoarder(),ME.teamId);
+					otherResult = getFightResult(getDataLoarder(),other);
+					
+				} else if(farmers) {
+					// Bataille déleveur
 					var other = farmers[0]==ME.id ? farmers[1] : farmers[0];
 					
-					var myResult = getFarmerResult(getDataLoarder(),ME.id);
-					var otherResult = getFarmerResult(getDataLoarder(),other);
-					
-					if(myResult==RESULT_DEAD) {
-						// D&eacute;faite
-						notificationData.result = NOTIFICATION_RESULT_DEFEAT;
-					} else if(otherResult==RESULT_DEAD) {
-						// Victoire
-						notificationData.result = NOTIFICATION_RESULT_WIN;
-					} else {
-						// Nul
-						notificationData.result = NOTIFICATION_RESULT_DRAW;
-					}
+					myResult = getFightResult(getDataLoarder(),ME.id);
+					otherResult = getFightResult(getDataLoarder(),other);
 					
 				} else if(leeks) {
+					// Bataille de poireaux
 					if(leeks.length==2) {
 						var myLeek = arrayIntersect(leeks,ME.leeksIds)[0];
 						var other = leeks[0]==myLeek ? leeks[1] : leeks[0];
 						
-						var myResult = getLeekResult(getDataLoarder(),myLeek);
-						var otherResult = getLeekResult(getDataLoarder(),other);
-						
-						if(myResult==RESULT_DEAD) {
-							// D&eacute;faite
-							notificationData.result = NOTIFICATION_RESULT_DEFEAT;
-						} else if(otherResult==RESULT_DEAD) {
-							// Victoire
-							notificationData.result = NOTIFICATION_RESULT_WIN;
-						} else {
-							// Nul
-							notificationData.result = NOTIFICATION_RESULT_DRAW;
-						}
+						myResult = getFightResult(getDataLoarder(),myLeek);
+						otherResult = getFightResult(getDataLoarder(),other);
 					}
+				}
+				
+				if(myResult==RESULT_DEAD) {
+					// Défaite
+					notificationData.result = NOTIFICATION_RESULT_DEFEAT;
+				} else if(otherResult==RESULT_DEAD) {
+					// Victoire
+					notificationData.result = NOTIFICATION_RESULT_WIN;
+				} else {
+					// Nul
+					notificationData.result = NOTIFICATION_RESULT_DRAW;
 				}
 				
 				setNotification(notificationData);
