@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars V2 - Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.1
+// @version			0.2
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -21,10 +21,10 @@
 
 /*
 Etapes :
-1) rÈcupÈration des notifs sur la page
+1) r√©cup√©ration des notifs sur la page
 2) pour chaque notif :
-	* si dÈj‡ traitÈ, on laisse
-	* si non traitÈ mais dÈj‡ en cache, on applique
+	* si d√©j√† trait√©, on laisse
+	* si non trait√© mais d√©j√† en cache, on applique
 	* si pas en cache, on traite puis on applique
 
 
@@ -139,7 +139,7 @@ function initStyles() {
 	DEFAULT_STYLES_NAMES.STYLE_TYPE_TOURNAMENT_WIN = "Tournoi gagn&eacute;";
 	DEFAULT_STYLES.STYLE_TYPE_TOURNAMENT_WIN = {selector:".tournamentWin",jquerySelector:".notification[type=9]",background:"#FFF0C6"};
 	
-	DEFAULT_STYLES_NAMES.STYLE_TYPE_ACHIEVEMENT = "SuccËs d&eacute;bloqu&eacute;";
+	DEFAULT_STYLES_NAMES.STYLE_TYPE_ACHIEVEMENT = "Succ√®s d&eacute;bloqu&eacute;";
 	DEFAULT_STYLES.STYLE_TYPE_ACHIEVEMENT = {selector:"a[href*=farmer] .notification",background:"#FFF0C6"};
 	
 	DEFAULT_STYLES_NAMES.STYLE_TYPE_LEVEL_UP = "Mont&eacute;e de niveau";
@@ -164,7 +164,6 @@ function applyNotificationColor(notification,notificationData) {
 	if(!notificationData) {
 		return;
 	}
-	console.log(notificationData);
 
 	if(notificationData.type==NOTIFICATION_TYPE_FIGHT || notificationData.type==NOTIFICATION_TYPE_TOURNAMENT) {
 		if(notificationData.result==LW_API.DEFEAT) {
@@ -196,8 +195,8 @@ function getNotifications() {
 
 ///////// PARSING ///////////////////////////////////////
 
-var TOURNAMENT_TEXT_16EME = "16Ëme de finale";
-var TOURNAMENT_TEXT_8EME = "8Ëme de finale";
+var TOURNAMENT_TEXT_16EME = "16√®me de finale";
+var TOURNAMENT_TEXT_8EME = "8√®me de finale";
 var TOURNAMENT_TEXT_QUART = "Quart de finale";
 var TOURNAMENT_TEXT_DEMI = "Demi finale";
 var TOURNAMENT_TEXT_FINALE = "Finale";
@@ -259,7 +258,7 @@ function getTournamentLeekId(data) {
 	var text = $(data).text().trim();
 	//console.log(text);
 	if(text.indexOf("Votre match")!=-1) {
-		// Match Èleveur
+		// Match √©leveur
 		return null;
 	}
 	
@@ -293,7 +292,15 @@ function processNext() {
 	var notification = toProcess.shift();	
 	notification.attr("colored","true");
 	var notificationId = notification.attr("href");
-	console.log(notificationId);
+	
+	var tournamentId = getTournamentId(notificationId);
+	if(tournamentId!==null) {
+		var round = getTournamentRound(notification);
+		var leekId = getTournamentLeekId(notification);
+		notificationId += "/"+round+"/"+leekId;
+	}
+	
+//	console.log(notificationId);
 	var notificationData = getNotification(notificationId);
 	
 	if(notificationData!=null) {
@@ -327,7 +334,6 @@ function processNext() {
 					}
 				}
 			}
-			return;
 		});
 		
 		return;
@@ -349,16 +355,9 @@ function processNext() {
 		return;
 	}
 	
-	var tournamentId = getTournamentId(notificationId);
-	console.log("tournamentId : "+tournamentId);
-	
 	if(tournamentId!==null) {
 		var round = getTournamentRound(notification);
 		var leekId = getTournamentLeekId(notification);
-		console.log("round : "+round);
-		console.log("leekId : "+leekId);
-		notificationId += "/"+round+"/"+leekId;
-		notificationData.id = notificationId;
 		notificationData.type = NOTIFICATION_TYPE_TOURNAMENT;
 		LW_API.getTournament(tournamentId,function(tournamentData) {
 			var entityId;
@@ -369,9 +368,9 @@ function processNext() {
 			} else if(tournamentData.tournament.type=="farmer") {
 				entityId = LW_API.getMyFarmer().id;
 			} 
-			console.log(tournamentData);
+		//	console.log(tournamentData);
 			var tournamentFight = LW_API.getTournamentFight(tournamentData,round,entityId,null);
-			console.log(tournamentFight);
+		//	console.log(tournamentFight);
 			if(tournamentFight==null) {
 				return;
 			}
@@ -408,7 +407,7 @@ checkCache();
 initStyles();
 
 setInterval(function() {
-	console.log("checkNotif (processing:"+processing+")");
+//	console.log("checkNotif (processing:"+processing+")");
 	if(!processing) {
 		processing = true;		
 		toProcess = getNotifications();
