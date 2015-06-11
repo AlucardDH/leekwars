@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars V2 - Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.4
+// @version			0.4.1
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -188,7 +188,7 @@ function applyNotificationColor(notification,notificationData) {
 ////////// NOTIFICATIONS A TRAITER /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function getNotifications() {
-	return $(".notification").parent().filter(function(e){return !$(e).attr("colored");});
+	return $.map($(".notification"),function(e){return $(e).parent();}).filter(function(e){return !e.attr("colored");});
 }
 
 ////////// FIN NOTIFICATIONS A TRAITER //////////////////////////////////////////////////////////////////////////////////////////////////////
