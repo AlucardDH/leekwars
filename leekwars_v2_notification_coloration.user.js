@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars V2 - Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.4.2
+// @version			0.4.3
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -149,7 +149,7 @@ function initStyles() {
 		var style = getStyle(styleType);
 		GM_addStyle(styleToString(style));
 		if(style.jquerySelector) {
-			$(style.jquerySelector).addClass(style.selector.replace(".",""));
+			$(style.jquerySelector).addClass(style.selector.substring(1));
 		}
 	}
 	
@@ -158,6 +158,15 @@ function initStyles() {
 	}
 	
 	GM_addStyle('a .notification:hover {background-color:#FFFFFF;}');
+}
+
+function updateStyleJQuery() {
+	for(var styleType in DEFAULT_STYLES) {
+		var style = getStyle(styleType);
+		if(style.jquerySelector) {
+			$(style.jquerySelector).addClass(style.selector.replace(".",""));
+		}
+	}
 }
 
 function applyNotificationColor(notification,notificationData) {
@@ -359,6 +368,14 @@ function processNext() {
 	
 	if(tournamentId!==null) {
 		var round = getTournamentRound(notification);
+		if(round==null) {
+			if(toProcess.length===0) {
+				processing = false;
+			} else {
+				setTimeout(processNext,PROCESS_DELAY);
+			}
+			return;
+		}
 		var leekId = getTournamentLeekId(notification);
 		notificationData.type = NOTIFICATION_TYPE_TOURNAMENT;
 		LW_API.getTournament(tournamentId,function(tournamentData) {
@@ -420,6 +437,7 @@ setInterval(function() {
 			processing = false;
 			return;
 		}
+		updateStyleJQuery();
 		processNext();
 	}
 
