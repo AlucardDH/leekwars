@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars V2 - Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.4.1
+// @version			0.4.2
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -33,7 +33,7 @@ Etapes :
 
 /////////// CACHE /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var DATAMODEL_VERSION = "0.2";
+var DATAMODEL_VERSION = "0.3";
 var GM_STORAGE = "leekwars.notifications.";
 
 function checkCache() {
@@ -371,6 +371,7 @@ function processNext() {
 				entityId = LW_API.getMyFarmer().id;
 			} 
 		//	console.log(tournamentData);
+		//	console.log("round : "+round+" entityId : "+entityId);
 			var tournamentFight = LW_API.getTournamentFight(tournamentData,round,entityId,null);
 		//	console.log(tournamentFight);
 			if(tournamentFight==null) {

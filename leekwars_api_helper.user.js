@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars V2 - API Helper
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.1
+// @version			0.2
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
 // @downloadURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_api_helper.user.js
@@ -142,8 +142,12 @@ LW_API = {
 		var result = null;
 		if(fight.contestants!=null) {
 			// tournament fight data
+			if(fight.fight==null) {
+				return null;
+			}
 			$.each(fight.contestants,function(index,contestant) {
-				if(contestant!=null && ((entityId==null && contestant.me) || (entityId!=null && contestant.link.indexOf(entityId)>-1)) && contestant.win) {
+				if(contestant.win===null) {
+				} else if(contestant!=null && ((entityId==null && contestant.me) || (entityId!=null && contestant.link.indexOf(entityId)>-1)) && contestant.win) {
 					result = LW_API.WIN;
 				} else if(contestant!=null && ((entityId==null && !contestant.me) || (entityId!=null && contestant.link.indexOf(entityId)==-1)) && contestant.win) {
 					result = LW_API.DEFEAT;
@@ -151,6 +155,7 @@ LW_API = {
 					result = LW_API.DRAW;
 				}
 			});
+			
 		} else {
 			// complete fight data
 			var winnerId = fight.fight.winner;
@@ -181,8 +186,12 @@ LW_API = {
 		var result = null;
 		if(fight.contestants!=null) {
 			// tournament fight data
+			if(fight.fight==null) {
+				return null;
+			}
 			$.each(fight.contestants,function(index,contestant) {
-				if(contestant!=null && contestant.me && contestant.win) {
+				if(contestant.win===null) {
+				} else if(contestant!=null && contestant.me && contestant.win) {
 					result = LW_API.WIN;
 				} else if(contestant!=null && !contestant.me && contestant.win) {
 					result = LW_API.DEFEAT;
