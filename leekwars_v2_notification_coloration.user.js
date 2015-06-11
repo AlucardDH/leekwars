@@ -188,7 +188,7 @@ function applyNotificationColor(notification,notificationData) {
 ////////// NOTIFICATIONS A TRAITER /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function getNotifications() {
-	return $(".notification").parent().filter(function(e){return !e.attr("colored");});
+	return $(".notification").parent().filter(function(e){return !$(e).attr("colored");});
 }
 
 ////////// FIN NOTIFICATIONS A TRAITER //////////////////////////////////////////////////////////////////////////////////////////////////////
