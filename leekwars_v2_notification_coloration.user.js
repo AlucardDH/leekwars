@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars V2 - Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.3
+// @version			0.4
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
