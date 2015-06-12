@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars V2 - Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.5
+// @version			0.5.1
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -495,6 +495,9 @@ setInterval(function() {
 						} else if(result==LW_API.DRAW) {
 							element.addClass("draw");
 						}
+						dateElement.before(element);
+					} else {
+						var element = $('<span class="no-fight"/>');
 						dateElement.before(element);
 					}
 				} else {
