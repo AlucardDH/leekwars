@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars V2 - Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.4.3
+// @version			0.5
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -122,22 +122,42 @@ function styleToString(style) {
 		
 	}
 	result += "}";
+	//console.log(result);
 
 	return result;
 }
 
 function initStyles() {
+
+// STYLES TOURNOIS 
+/*
+	  width: 16px;
+  height: 16px;
+  background: greenyellow;
+  padding: 4px;
+  border-color: #555;
+  border-width: 9px 2px;
+  border-style: solid;
+*/
+	GM_addStyle(styleToString({selector:".tournament .fight",width:"16px",height:"16px",padding:"4px","border-color":"#555","border-width":"9px 2px","border-style":"solid"}));
+	GM_addStyle(styleToString({selector:".tournament .no-fight",display:"inline-block",width:"16px",height:"16px",padding:"4px",background:"#555","border-color":"#555","border-width":"9px 2px","border-style":"solid"}));
+	GM_addStyle(styleToString({selector:".tournament *","vertical-align":"top"}));	
+
+// STYLES NOTIFICATIONS
 	DEFAULT_STYLES_NAMES.STYLE_TYPE_WIN = "Match gagn&eacute;";
-	DEFAULT_STYLES.STYLE_TYPE_WIN = {selector:".notification.win",background:"#B8FFB3"};
+	DEFAULT_STYLES.STYLE_TYPE_WIN = {selector:".notification.win,.fight.win",background:"#B8FFB3"};
 	
 	DEFAULT_STYLES_NAMES.STYLE_TYPE_DRAW = "Match nul";
-	DEFAULT_STYLES.STYLE_TYPE_DRAW = {selector:".notification.draw",background:"#DCDCDC"};
+	DEFAULT_STYLES.STYLE_TYPE_DRAW = {selector:".notification.draw,.fight.draw",background:"#DCDCDC"};
 	
 	DEFAULT_STYLES_NAMES.STYLE_TYPE_DEFEAT = "Match perdu";
-	DEFAULT_STYLES.STYLE_TYPE_DEFEAT = {selector:".notification.defeat",background:"#FFB3AE"};
+	DEFAULT_STYLES.STYLE_TYPE_DEFEAT = {selector:".notification.defeat,.fight.defeat",background:"#FFB3AE"};
 	
 	DEFAULT_STYLES_NAMES.STYLE_TYPE_TOURNAMENT_WIN = "Tournoi gagn&eacute;";
 	DEFAULT_STYLES.STYLE_TYPE_TOURNAMENT_WIN = {selector:".tournamentWin",jquerySelector:".notification[type=9]",background:"#FFF0C6"};
+	
+	DEFAULT_STYLES_NAMES.STYLE_TYPE_TOURNAMENT_TEAM_WIN = "Tournoi éleveur gagn&eacute;";
+	DEFAULT_STYLES.STYLE_TYPE_TOURNAMENT_TEAM_WIN = {selector:".tournamentWin",jquerySelector:".notification[type=17]",background:"#FFF0C6"};
 	
 	DEFAULT_STYLES_NAMES.STYLE_TYPE_ACHIEVEMENT = "Succès d&eacute;bloqu&eacute;";
 	DEFAULT_STYLES.STYLE_TYPE_ACHIEVEMENT = {selector:"a[href*=farmer] .notification",background:"#FFF0C6"};
@@ -164,7 +184,7 @@ function updateStyleJQuery() {
 	for(var styleType in DEFAULT_STYLES) {
 		var style = getStyle(styleType);
 		if(style.jquerySelector) {
-			$(style.jquerySelector).addClass(style.selector.replace(".",""));
+			$(style.jquerySelector).addClass(style.selector.substring(1));
 		}
 	}
 }
@@ -441,6 +461,51 @@ setInterval(function() {
 		processNext();
 	}
 
+},2000);
+
+
+setInterval(function() {
+	var tournaments = $.map($(".tournament"),function(e){return $(e).parent();}).filter(function(e){return !e.attr("colored");});
+	$.each(tournaments,function(index,tournament) {
+		tournament.attr("colored","true");
+		var link = tournament.attr("href");
+		var tournamentId = getTournamentId(link);
+		var entityId = location.href.substring(location.href.lastIndexOf("/")+1);
+		var dateElement = tournament.find(".date");
+		var date = dateElement.text();
+		var baseText = tournament.text();
+		baseText = baseText.substring(0,baseText.indexOf(date)).trim();
+		LW_API.getTournament(tournamentId,function(tournamentData) {
+			$.each(TOURNAMENT_ROUND_KEY,function(index,round) {
+				// getTournamentFight:function(tournamentData,round,entityId,entityName)
+				var fight = LW_API.getTournamentFight(tournamentData,round,entityId,null);
+				if(fight!=null) {
+					var result = LW_API.getMyFightResult(fight);
+					if(result!=null) {
+						var element = $('<img src="../static/image/icon/garden.png" class="fight"/>');
+						element.click(function(event){
+							event.preventDefault();
+							event.stopPropagation();
+							LW.page(fight.fight);
+						});
+						if(result==LW_API.WIN) {
+							element.addClass("win");
+						} else if(result==LW_API.DEFEAT) {
+							element.addClass("defeat");
+						} else if(result==LW_API.DRAW) {
+							element.addClass("draw");
+						}
+						dateElement.before(element);
+					}
+				} else {
+					var element = $('<span class="no-fight"/>');
+					dateElement.before(element);
+				}
+				//console.log(fight);
+			});
+		});
+		
+	});
 },2000);
 
 
