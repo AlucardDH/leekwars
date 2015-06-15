@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars V2 - Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.5.1
+// @version			0.5.2
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -470,7 +470,35 @@ setInterval(function() {
 		tournament.attr("colored","true");
 		var link = tournament.attr("href");
 		var tournamentId = getTournamentId(link);
-		var entityId = location.href.substring(location.href.lastIndexOf("/")+1);
+		
+		var currentPage = LW.currentPage;
+		
+		var entityId = null;
+		var entityName = null;
+		if(currentPage=="leek") {
+			entityId = location.href.substring(location.href.lastIndexOf("leek")+5);
+			entityName = $("#leek-page h1").text();
+			if(entityId=="") {
+				$.each(LW_API.getMyFarmer().leeks,function(index,leek) {
+					if(leek.name==entityName) {
+						entityId = leek.id;
+					}
+				});
+			}
+		} else if(currentPage=="farmer") {
+			entityId = location.href.substring(location.href.lastIndexOf("farmer")+7);
+			entityName = $("#farmer-page h1").text();
+			if(entityId=="") {
+				entityId = LW_API.getMyFarmer().id;
+			}
+ 		} else if(currentPage=="team") {
+			entityId = location.href.substring(location.href.lastIndexOf("team")+5);
+			entityName = $("#team-name").text();
+			if(entityId=="") {
+				entityId = LW_API.getMyFarmer().team.id;
+			}
+ 		}
+		
 		var dateElement = tournament.find(".date");
 		var date = dateElement.text();
 		var baseText = tournament.text();
@@ -478,9 +506,9 @@ setInterval(function() {
 		LW_API.getTournament(tournamentId,function(tournamentData) {
 			$.each(TOURNAMENT_ROUND_KEY,function(index,round) {
 				// getTournamentFight:function(tournamentData,round,entityId,entityName)
-				var fight = LW_API.getTournamentFight(tournamentData,round,entityId,null);
+				var fight = LW_API.getTournamentFight(tournamentData,round,entityId,entityName);
 				if(fight!=null) {
-					var result = LW_API.getMyFightResult(fight);
+					var result = LW_API.getFightResult(fight,entityId,entityName);
 					if(result!=null) {
 						var element = $('<img src="../static/image/icon/garden.png" class="fight"/>');
 						element.click(function(event){
