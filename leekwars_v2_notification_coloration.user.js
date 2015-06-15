@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars V2 - Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.5.2
+// @version			0.6
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -17,6 +17,7 @@
 // @grant			GM_setValue
 // @grant			GM_deleteValue
 // @grant			GM_listValues
+// @grant			unsafeWindow
 // ==/UserScript==
 
 /*
@@ -195,13 +196,13 @@ function applyNotificationColor(notification,notificationData) {
 	}
 
 	if(notificationData.type==NOTIFICATION_TYPE_FIGHT || notificationData.type==NOTIFICATION_TYPE_TOURNAMENT) {
-		if(notificationData.result==LW_API.DEFEAT) {
+		if(notificationData.result==unsafeWindow.LW_API.DEFEAT) {
 			// D&eacute;faite
 			notification.children().addClass("defeat");
-		} else if(notificationData.result==LW_API.WIN) {
+		} else if(notificationData.result==unsafeWindow.LW_API.WIN) {
 			// Victoire
 			notification.children().addClass("win");
-		} else if(notificationData.result==LW_API.DRAW) {
+		} else if(notificationData.result==unsafeWindow.LW_API.DRAW) {
 			// Nul
 			notification.children().addClass("draw");
 		}
@@ -293,7 +294,7 @@ function getTournamentLeekId(data) {
 	
 	var name = text.substring(0,text.indexOf(" "));
 	var result = null;
-	$.each(LW_API.getMyFarmer().leeks,function(index,leek) {
+	$.each(unsafeWindow.LW_API.getMyFarmer().leeks,function(index,leek) {
 		if(leek.name==name) {
 			result = leek.id;
 		}
@@ -319,8 +320,10 @@ function processNext() {
 	
 	processing = true;
 	var notification = toProcess.shift();	
+	//console.log(notification);
 	notification.attr("colored","true");
 	var notificationId = notification.attr("href");
+	//console.log(notificationId);
 	
 	var tournamentId = getTournamentId(notificationId);
 	if(tournamentId!==null) {
@@ -345,13 +348,13 @@ function processNext() {
 	}
 	
 	var fightId = getFightId(notificationId);
-//	console.log("fightId : "+fightId);
+	//console.log("fightId : "+fightId);
 
 	if(fightId!==null) {
 		notificationData.type = NOTIFICATION_TYPE_FIGHT;
-		LW_API.getFight(fightId,function(fight) {
+		unsafeWindow.LW_API.getFight(fightId,function(fight) {
 			if(fight!==null) {
-				var result = LW_API.getMyFightResult(fight);
+				var result = unsafeWindow.LW_API.getMyFightResult(fight);
 				if(result!=null) {
 					notificationData.result = result;
 					setNotification(notificationData);
@@ -398,23 +401,23 @@ function processNext() {
 		}
 		var leekId = getTournamentLeekId(notification);
 		notificationData.type = NOTIFICATION_TYPE_TOURNAMENT;
-		LW_API.getTournament(tournamentId,function(tournamentData) {
+		unsafeWindow.LW_API.getTournament(tournamentId,function(tournamentData) {
 			var entityId;
 			if(tournamentData.tournament.type=="solo") {
 				entityId = leekId;
 			} else if(tournamentData.tournament.type=="team") {
-				entityId = LW_API.getMyFarmer().team.id;
+				entityId = unsafeWindow.LW_API.getMyFarmer().team.id;
 			} else if(tournamentData.tournament.type=="farmer") {
-				entityId = LW_API.getMyFarmer().id;
+				entityId = unsafeWindow.LW_API.getMyFarmer().id;
 			} 
 		//	console.log(tournamentData);
 		//	console.log("round : "+round+" entityId : "+entityId);
-			var tournamentFight = LW_API.getTournamentFight(tournamentData,round,entityId,null);
+			var tournamentFight = unsafeWindow.LW_API.getTournamentFight(tournamentData,round,entityId,null);
 		//	console.log(tournamentFight);
 			if(tournamentFight==null) {
 				return;
 			}
-			var result = LW_API.getFightResult(tournamentFight,entityId,null);
+			var result = unsafeWindow.LW_API.getFightResult(tournamentFight,entityId,null);
 		//	console.log(result);
 			if(result!=null) {
 				notificationData.result = result;
@@ -449,10 +452,11 @@ checkCache();
 initStyles();
 
 setInterval(function() {
-//	console.log("checkNotif (processing:"+processing+")");
+	//console.log("checkNotif (processing : "+processing+")");
 	if(!processing) {
 		processing = true;		
 		toProcess = getNotifications();
+		//console.log(toProcess);
 		if(toProcess===null || toProcess.length===0) {
 			processing = false;
 			return;
@@ -471,7 +475,7 @@ setInterval(function() {
 		var link = tournament.attr("href");
 		var tournamentId = getTournamentId(link);
 		
-		var currentPage = LW.currentPage;
+		var currentPage = unsafeWindow.LW.currentPage;
 		
 		var entityId = null;
 		var entityName = null;
@@ -479,7 +483,7 @@ setInterval(function() {
 			entityId = location.href.substring(location.href.lastIndexOf("leek")+5);
 			entityName = $("#leek-page h1").text();
 			if(entityId=="") {
-				$.each(LW_API.getMyFarmer().leeks,function(index,leek) {
+				$.each(unsafeWindow.LW_API.getMyFarmer().leeks,function(index,leek) {
 					if(leek.name==entityName) {
 						entityId = leek.id;
 					}
@@ -489,13 +493,13 @@ setInterval(function() {
 			entityId = location.href.substring(location.href.lastIndexOf("farmer")+7);
 			entityName = $("#farmer-page h1").text();
 			if(entityId=="") {
-				entityId = LW_API.getMyFarmer().id;
+				entityId = unsafeWindow.LW_API.getMyFarmer().id;
 			}
  		} else if(currentPage=="team") {
 			entityId = location.href.substring(location.href.lastIndexOf("team")+5);
 			entityName = $("#team-name").text();
 			if(entityId=="") {
-				entityId = LW_API.getMyFarmer().team.id;
+				entityId = unsafeWindow.LW_API.getMyFarmer().team.id;
 			}
  		}
 		
@@ -503,24 +507,24 @@ setInterval(function() {
 		var date = dateElement.text();
 		var baseText = tournament.text();
 		baseText = baseText.substring(0,baseText.indexOf(date)).trim();
-		LW_API.getTournament(tournamentId,function(tournamentData) {
+		unsafeWindow.LW_API.getTournament(tournamentId,function(tournamentData) {
 			$.each(TOURNAMENT_ROUND_KEY,function(index,round) {
 				// getTournamentFight:function(tournamentData,round,entityId,entityName)
-				var fight = LW_API.getTournamentFight(tournamentData,round,entityId,entityName);
+				var fight = unsafeWindow.LW_API.getTournamentFight(tournamentData,round,entityId,entityName);
 				if(fight!=null) {
-					var result = LW_API.getFightResult(fight,entityId,entityName);
+					var result = unsafeWindow.LW_API.getFightResult(fight,entityId,entityName);
 					if(result!=null) {
 						var element = $('<img src="../static/image/icon/garden.png" class="fight"/>');
 						element.click(function(event){
 							event.preventDefault();
 							event.stopPropagation();
-							LW.page(fight.fight);
+							unsafeWindow.LW.page(fight.fight);
 						});
-						if(result==LW_API.WIN) {
+						if(result==unsafeWindow.LW_API.WIN) {
 							element.addClass("win");
-						} else if(result==LW_API.DEFEAT) {
+						} else if(result==unsafeWindow.LW_API.DEFEAT) {
 							element.addClass("defeat");
-						} else if(result==LW_API.DRAW) {
+						} else if(result==unsafeWindow.LW_API.DRAW) {
 							element.addClass("draw");
 						}
 						dateElement.before(element);

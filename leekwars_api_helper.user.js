@@ -1,25 +1,27 @@
 // ==UserScript==
 // @name			Leek Wars V2 - API Helper
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.2.1
+// @version			0.2.2
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
 // @downloadURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_api_helper.user.js
 // @updateURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_api_helper.user.js
+// @require 		http://leekwars.com/static/lib/jquery-2.1.1.min.js
 // @match			http://leekwars.com
 // @match			http://leekwars.com/*
 // @include        	http://leekwars.com
 // @include        	http://leekwars.com/*
+// @grant			unsafeWindow
 // ==/UserScript==
 
-LW_API = {
+unsafeWindow.LW_API = {
 
 	WIN:"WIN",
 	DEFEAT:"DEFEAT",
 	DRAW:"DRAW",
 
     isReady:function() {
-		return LW!=null;
+		return unsafeWindow.LW!=null;
 	},
 	
 	getMyFarmer:function(handler) {	
@@ -29,24 +31,23 @@ LW_API = {
 		}
 		
 		if(handler!=null) {
-			handler(LW.farmer);
+			handler(unsafeWindow.LW.farmer);
 		} else {
-			return LW.farmer;
+			return unsafeWindow.LW.farmer;
 		}
 	},
 	
 	getFarmer:function(farmerId,handler) {	
 		if(!this.isReady()) {
-			console.error("LW_API not ready");
 			return;
 		}
 		
-		if(farmerId==LW.farmer.id) {
+		if(farmerId==unsafeWindow.LW.farmer.id) {
 			if(handler!=null) {
-				handler(LW.farmer);
+				handler(unsafeWindow.LW.farmer);
 			}
 		} else {
-			var url = LW.api+"farmer/get/"+farmerId;
+			var url = unsafeWindow.LW.api+"farmer/get/"+farmerId;
 			$.getJSON(url,handler);
 		}
 		
@@ -58,7 +59,7 @@ LW_API = {
 			return;
 		}
 		
-		var url = LW.api+"leek/get/"+leekId;
+		var url = unsafeWindow.LW.api+"leek/get/"+leekId;
 		$.getJSON(url,handler);
 	},
 	
@@ -68,7 +69,7 @@ LW_API = {
 			return;
 		}
 		
-		var url = LW.api+"fight/get/"+fightId;
+		var url = unsafeWindow.LW.api+"fight/get/"+fightId;
 		$.getJSON(url,handler);
 	},
 	
@@ -78,7 +79,7 @@ LW_API = {
 			return;
 		}
 		
-		var url = LW.api+"team/get/"+teamId;
+		var url = unsafeWindow.LW.api+"team/get/"+teamId;
 		$.getJSON(url,handler);
 	},
 	
@@ -88,7 +89,7 @@ LW_API = {
 			return;
 		}
 		
-		var url = LW.api+"tournament/get/"+tournamentId+"/$";
+		var url = unsafeWindow.LW.api+"tournament/get/"+tournamentId+"/$";
 		$.getJSON(url,handler);
 	},
 	
@@ -148,11 +149,11 @@ LW_API = {
 			$.each(fight.contestants,function(index,contestant) {
 				if(contestant==null || contestant.win===null) {
 				} else if(contestant!=null && ((entityId==null && contestant.me) || (entityId!=null && contestant.link.indexOf(entityId)>-1)) && contestant.win) {
-					result = LW_API.WIN;
+					result = unsafeWindow.LW_API.WIN;
 				} else if(contestant!=null && ((entityId==null && !contestant.me) || (entityId!=null && contestant.link.indexOf(entityId)==-1)) && contestant.win) {
-					result = LW_API.DEFEAT;
+					result = unsafeWindow.LW_API.DEFEAT;
 				} else if(result==null) {
-					result = LW_API.DRAW;
+					result = unsafeWindow.LW_API.DRAW;
 				}
 			});
 			
@@ -192,11 +193,11 @@ LW_API = {
 			$.each(fight.contestants,function(index,contestant) {
 				if(contestant==null || contestant.win===null) {
 				} else if(contestant!=null && contestant.me && contestant.win) {
-					result = LW_API.WIN;
+					result = unsafeWindow.LW_API.WIN;
 				} else if(contestant!=null && !contestant.me && contestant.win) {
-					result = LW_API.DEFEAT;
+					result = unsafeWindow.LW_API.DEFEAT;
 				} else if(result==null) {
-					result = LW_API.DRAW;
+					result = unsafeWindow.LW_API.DRAW;
 				}
 			});
 		} else {
@@ -220,7 +221,6 @@ LW_API = {
 		
 		return result;
 	}
-	
 	
 	
 };
