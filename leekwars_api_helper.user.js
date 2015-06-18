@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars V2 - API Helper
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.2.2
+// @version			0.2.3
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
 // @downloadURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_api_helper.user.js
@@ -93,6 +93,24 @@ unsafeWindow.LW_API = {
 		$.getJSON(url,handler);
 	},
 	
+	tournamentConstestantTest:function(contestant,entityId,entityName) {
+		if(contestant==null) {
+			return false;
+		}
+		if(entityId!=null && !contestant.link.endsWith(entityId)) {
+			return false;
+		}
+		if(entityName!=null && contestant.name.indexOf(entityName)==-1) {
+			return false;
+		}
+		if(entityId==null && entityName==null && !contestant.me) {
+			return false;
+		}
+		return true;
+	},
+	
+	
+	
 	getTournamentFight:function(tournamentData,round,entityId,entityName) {
 	//	console.log(round+","+entityId+","+entityName);
 		if(
@@ -103,28 +121,12 @@ unsafeWindow.LW_API = {
 		) {
 			return null;
 		}
-		var contestantLink;
-		if(tournamentData.tournament.type=="solo") {
-			contestantLink = "/leek/"+entityId;
-		} else if(tournamentData.tournament.type=="team") {
-			contestantLink = "/team/"+entityId;
-		} else if(tournamentData.tournament.type=="farmer") {
-			contestantLink = "/farmer/"+entityId;
-		} 
-	//	console.log(contestantLink);
+
 		var result = null;
 		$.each(tournamentData.tournament.rounds[round],function(index,fight) {
 		//	console.log(fight);
 			$.each(fight.contestants,function(index,contestant) {
-				if(
-					contestant!=null
-					&& (
-						(entityId!=null && contestant.link==contestantLink) 
-						|| (entityName!=null && contestant.name.indexOf(entityName)>-1)
-						|| contestant.me
-						)
-				) {
-				//	console.log("ok !");
+				if(unsafeWindow.LW_API.tournamentConstestantTest(contestant,entityId,entityName)) {
 					result = fight;
 				}
 			});
@@ -148,9 +150,9 @@ unsafeWindow.LW_API = {
 			}
 			$.each(fight.contestants,function(index,contestant) {
 				if(contestant==null || contestant.win===null) {
-				} else if(contestant!=null && ((entityId==null && contestant.me) || (entityId!=null && contestant.link.indexOf(entityId)>-1)) && contestant.win) {
+				} else if(unsafeWindow.LW_API.tournamentConstestantTest(contestant,entityId,entityName) && contestant.win) {
 					result = unsafeWindow.LW_API.WIN;
-				} else if(contestant!=null && ((entityId==null && !contestant.me) || (entityId!=null && contestant.link.indexOf(entityId)==-1)) && contestant.win) {
+				} else if(!unsafeWindow.LW_API.tournamentConstestantTest(contestant,entityId,entityName) && contestant.win) {
 					result = unsafeWindow.LW_API.DEFEAT;
 				} else if(result==null) {
 					result = unsafeWindow.LW_API.DRAW;
@@ -192,9 +194,9 @@ unsafeWindow.LW_API = {
 			}
 			$.each(fight.contestants,function(index,contestant) {
 				if(contestant==null || contestant.win===null) {
-				} else if(contestant!=null && contestant.me && contestant.win) {
+				} else if(unsafeWindow.LW_API.tournamentConstestantTest(contestant) && contestant.win) {
 					result = unsafeWindow.LW_API.WIN;
-				} else if(contestant!=null && !contestant.me && contestant.win) {
+				} else if(!unsafeWindow.LW_API.tournamentConstestantTest(contestant) && contestant.win) {
 					result = unsafeWindow.LW_API.DEFEAT;
 				} else if(result==null) {
 					result = unsafeWindow.LW_API.DRAW;
