@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars V2 - Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.7
+// @version			0.8
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -243,6 +243,14 @@ var REGEX_FIGHT = /.*\/fight\/(.*)/i;
 var REGEX_TOURNAMENT = /.*\/tournament\/(.*)/i;
 var REGEX_FORUM = /.*\/forum\/(.*)/i;
 
+function getCompos() {
+	var compos = [];
+	$.each($(".compo[compo!=-1] h2"),function(index,element) {
+		compos.push($(element).text());
+	});
+	return compos;
+}
+
 function getLeekId(notificationId) {
 	var value = REGEX_LEEK.exec(notificationId);
 	return value && value[1] ? value[1] : null;
@@ -444,9 +452,12 @@ setInterval(function() {
 
 
 setInterval(function() {
-		
+
 	var tournaments = $.map($(".tournament"),function(e){return $(e).parent();}).filter(function(e){return !e.attr("colored");});
 	if(tournaments!=null && tournaments.length>0) {
+	
+		var compos = getCompos();
+		var otherTeam = compos.length==0;
 		
 		var currentPage = unsafeWindow.LW.currentPage;
 		var entityId = null;
@@ -457,7 +468,7 @@ setInterval(function() {
 				entityId = location.href.substring(idIndex+5);
 			}
 			entityName = $("#leek-page h1").text();
-			if(entityId=="") {
+			if(entityId==null || entityId=="") {
 				$.each(unsafeWindow.LW_API.getMyFarmer().leeks,function(index,leek) {
 					if(leek.name==entityName) {
 						entityId = leek.id;
@@ -470,16 +481,17 @@ setInterval(function() {
 				entityId = location.href.substring(idIndex+7);
 			}
 			entityName = $("#farmer-page h1").text();
-			if(entityId=="") {
+			if(entityId==null || entityId=="") {
 				entityId = unsafeWindow.LW_API.getMyFarmer().id;
 			}
 		} else if(currentPage=="team") {
+	
 			var idIndex = location.href.lastIndexOf("team/");
 			if(idIndex>-1) {
 				entityId = location.href.substring(idIndex+5);
 			}
 			entityName = $("#team-name").text();
-			if(entityId=="") {
+			if(entityId==null || entityId=="") {
 				entityId = unsafeWindow.LW_API.getMyFarmer().team.id;
 			}
 		}
@@ -489,12 +501,35 @@ setInterval(function() {
 			var link = tournament.attr("href");
 			var tournamentId = getTournamentId(link);
 			
-			
 			var dateElement = tournament.find(".date");
 			var date = dateElement.text();
 			var baseText = tournament.text();
 			baseText = baseText.substring(0,baseText.indexOf(date)).trim();
 			unsafeWindow.LW_API.getTournament(tournamentId,function(tournamentData) {
+
+				if(currentPage=="team") {
+					var contestants = unsafeWindow.LW_API.getTournamentContestants(tournamentData,TOURNAMENT_ROUND_KEY[0]);
+					contestants = $.grep(contestants,function(contestant) {
+						return contestant.link.indexOf(entityId)>-1;
+					});
+					
+					var found = false;
+
+					$.each(contestants,function(index,contestant) {
+						if(!found && compos.indexOf(contestant.name)==-1) {
+							found = true;
+							var shortName = contestant.name.substring(contestant.name.indexOf("-")+2,contestant.name.indexOf("("));
+							dateElement.append("<br/>"+shortName);
+							dateElement.css("margin-top","-25px");
+							entityName = contestant.name;
+							compos.push(contestant.name);
+						}
+					});
+						
+					
+					
+				}
+			
 				$.each(TOURNAMENT_ROUND_KEY,function(index,round) {
 					// getTournamentFight:function(tournamentData,round,entityId,entityName)
 					var fight = unsafeWindow.LW_API.getTournamentFight(tournamentData,round,entityId,entityName);

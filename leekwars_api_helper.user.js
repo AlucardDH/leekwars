@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars V2 - API Helper
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.2.3
+// @version			0.3
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
 // @downloadURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_api_helper.user.js
@@ -24,6 +24,8 @@ unsafeWindow.LW_API = {
 		return unsafeWindow.LW!=null;
 	},
 	
+// Infos
+
 	getMyFarmer:function(handler) {	
 		if(!this.isReady()) {
 			console.error("LW_API not ready");
@@ -63,6 +65,17 @@ unsafeWindow.LW_API = {
 		$.getJSON(url,handler);
 	},
 	
+	getTeam:function(teamId,handler) {	
+		if(!this.isReady()) {
+			console.error("LW_API not ready");
+			return;
+		}
+		
+		var url = unsafeWindow.LW.api+"team/get/"+teamId;
+		$.getJSON(url,handler);
+	},
+	
+// Fights
     getFight:function(fightId,handler) {	
 		if(!this.isReady()) {
 			console.error("LW_API not ready");
@@ -70,16 +83,6 @@ unsafeWindow.LW_API = {
 		}
 		
 		var url = unsafeWindow.LW.api+"fight/get/"+fightId;
-		$.getJSON(url,handler);
-	},
-	
-    getTeam:function(teamId,handler) {	
-		if(!this.isReady()) {
-			console.error("LW_API not ready");
-			return;
-		}
-		
-		var url = unsafeWindow.LW.api+"team/get/"+teamId;
 		$.getJSON(url,handler);
 	},
 	
@@ -109,7 +112,25 @@ unsafeWindow.LW_API = {
 		return true;
 	},
 	
-	
+	getTournamentContestants:function(tournamentData,round) {
+		if(
+			tournamentData==null 
+			|| tournamentData.tournament==null 
+			|| tournamentData.tournament.rounds==null 
+			|| tournamentData.tournament.rounds[round]==null
+		) {
+			return null;
+		}
+
+		var result = [];
+		$.each(tournamentData.tournament.rounds[round],function(index,fight) {
+			$.each(fight.contestants,function(index,contestant) {
+				result.push(contestant);
+			});
+		});
+		
+		return result;
+	},
 	
 	getTournamentFight:function(tournamentData,round,entityId,entityName) {
 	//	console.log(round+","+entityId+","+entityName);
@@ -222,7 +243,28 @@ unsafeWindow.LW_API = {
 		}
 		
 		return result;
-	}
+	},
 	
+// IAs
+
+    getAIs:function(handler) {	
+		if(!this.isReady()) {
+			console.error("LW_API not ready");
+			return;
+		}
+		
+		var url = unsafeWindow.LW.api+"ai/get-farmer-ais/$";
+		$.getJSON(url,handler);
+	},
+
+    getAI:function(aiId,handler) {	
+		if(!this.isReady()) {
+			console.error("LW_API not ready");
+			return;
+		}
+		
+		var url = unsafeWindow.LW.api+"ai/get/"+aiId+"/$";
+		$.getJSON(url,handler);
+	}
 	
 };
