@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars V2 - API Helper
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.3
+// @version			0.4
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
 // @downloadURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_api_helper.user.js
@@ -252,9 +252,10 @@ unsafeWindow.LW_API = {
 			console.error("LW_API not ready");
 			return;
 		}
-		
-		var url = unsafeWindow.LW.api+"ai/get-farmer-ais/$";
-		$.getJSON(url,handler);
+		//
+		//var url = unsafeWindow.LW.api+"ai/get-farmer-ais/$";
+		//$.getJSON(url,handler);
+		handler(unsafeWindow.LW.farmer.ais);
 	},
 
     getAI:function(aiId,handler) {	
