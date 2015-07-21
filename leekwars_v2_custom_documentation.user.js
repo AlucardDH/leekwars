@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars V2 - Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.1
+// @version			0.2
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -11,6 +11,7 @@
 // @match			http://leekwars.com/*
 // @include        	http://leekwars.com
 // @include        	http://leekwars.com/*
+// @require 		http://leekwars.com/static/lib/jquery-2.1.1.min.js
 // @grant			GM_addStyle
 // @grant			unsafeWindow
 // ==/UserScript==
@@ -193,13 +194,14 @@ function hasOpeningAccolade(line) {
 
 function updateAI(aiId) {
 	var previousVersion = US_AIS[aiId];
-	LW_API.getAI(aiId,function(newVersion){
+	unsafeWindow.LW_API.getAI(aiId,function(newVersion){
 		newVersion = newVersion.ai;
 	//	console.log(newVersion);
 		newVersion.docs = {};
 		
-		if(previousVersion==null || newVersion.code!=newVersion.code) {
+		if(previousVersion==null || previousVersion.code!=newVersion.code) {
 			// Updating !
+			console.log("Updating "+newVersion.name);
 			
 			var lines = newVersion.code.split("\n");
 			
@@ -340,10 +342,10 @@ function updateAI(aiId) {
 			if(previousVersion!=null) {
 				$.each(previousVersion.docs,function(name,doc) {
 					
-					var newDoc = newVersion.docs(doc.name);
+					var newDoc = newVersion.docs[doc.name];
 					if(newDoc!=null) {
 						newDoc.index = doc.index;
-						unsafeWindow.LW.keywords[doc.index] = [newDoc.name,docToCompletionName(newDoc),docToString(newDoc),newDoc.type,newDoc.params.length];
+						unsafeWindow.LW.keywords[doc.index] = cloneInto([newDoc.name,docToCompletionName(newDoc),docToString(newDoc),newDoc.type,newDoc.params.length],unsafeWindow);
 					} else {
 						//unsafeWindow.LW.keywords[doc.index] = null;
 					}
@@ -354,8 +356,11 @@ function updateAI(aiId) {
 			// applying new doc
 			$.each(newVersion.docs,function(name,newDoc) {
 				if(newDoc.index==null) {
-					unsafeWindow.LW.keywords.push([newDoc.name,docToCompletionName(newDoc),docToString(newDoc),newDoc.type,newDoc.params.length]);
-					newDoc.index = unsafeWindow.LW.keywords.length;
+					//unsafeWindow.LW.keywords.push(d);
+					newDoc.index = unsafeWindow.LW.keywords.push(cloneInto([newDoc.name,docToCompletionName(newDoc),docToString(newDoc),newDoc.type,newDoc.params.length],unsafeWindow))-1;//unsafeWindow.LW.keywords.length;
+					//newDoc.index = unsafeWindow.LW.keywords.length+1;
+					//unsafeWindow.LW.keywords[newDoc.index] = d;
+					//unsafeWindow.LW.keywords.push(d);//unsafeWindow.LW.keywords.length;
 				}				
 			});
 			
@@ -366,8 +371,9 @@ function updateAI(aiId) {
 }
 
 function update() {
+	console.log("Doc update !");
 	
-	LW_API.getAIs(function(ias){
+	unsafeWindow.LW_API.getAIs(function(ias){
 		$.each(ias,function(index,ai){
 			updateAI(ai.id);
 		});
