@@ -387,7 +387,7 @@ setInterval(update,5000);
 
 
 function getEditor() {
-	return unsafeWindow.editors[unsafeWindow.current];
+	return unsafeWindow.editors!=null && unsafeWindow.current!=null ? unsafeWindow.editors[unsafeWindow.current] : null;
 }
 
 function leekwarsUpdateHintDetails() {
