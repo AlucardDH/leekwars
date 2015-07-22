@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars V2 - API Helper
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.4.1
+// @version			0.4.2
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
 // @downloadURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_api_helper.user.js
@@ -187,14 +187,14 @@ unsafeWindow.LW_API = {
 				return this.DRAW;
 			}
 			var winnerData;
-			if(fight.fight.type=="solo") {
+			if(fight.fight.type=="solo" || fight.fight.type==0) {
 				winnerData = fight.fight["leeks"+winnerId].length==0 ? {"id":0} : fight.fight["leeks"+winnerId][0];
 				return winnerData.id==entityId ? this.WIN : this.DEFEAT;
-			} else if(fight.fight.type=="team") {
-				winnerData = fight.fight["team"+winnerId];
-				return winnerData==entityId ? this.WIN : this.DEFEAT;
-			} else if(fight.fight.type=="farmer") {
+			} else if(fight.fight.type=="farmer" || fight.fight.type==1) {
 				winnerData = fight.fight["farmer"+winnerId];
+				return winnerData==entityId ? this.WIN : this.DEFEAT;
+			} else if(fight.fight.type=="team" || fight.fight.type==2) {
+				winnerData = fight.fight["team"+winnerId];
 				return winnerData==entityId ? this.WIN : this.DEFEAT;
 			}
 		}
@@ -230,15 +230,15 @@ unsafeWindow.LW_API = {
 				return this.DRAW;
 			}
 			var winnerData;
-			if(fight.fight.type=="solo") {
+			if(fight.fight.type=="solo" || fight.fight.type==0) {
 				winnerData = fight.fight["leeks"+winnerId].length==0 ? {"id":0} : fight.fight["leeks"+winnerId][0];
 				return this.getMyFarmer().leeks[winnerData.id]!=null ? this.WIN : this.DEFEAT;
+			} else if(fight.fight.type=="farmer" || fight.fight.type==1) {
+				winnerData = fight.fight["farmer"+winnerId];
+				return winnerData==this.getMyFarmer().id ? this.WIN : this.DEFEAT;
 			} else if(fight.fight.type=="team" || fight.fight.type==2) {
 				winnerData = fight.fight["team"+winnerId];
 				return winnerData==this.getMyFarmer().team.id ? this.WIN : this.DEFEAT;
-			} else if(fight.fight.type=="farmer") {
-				winnerData = fight.fight["farmer"+winnerId];
-				return winnerData==this.getMyFarmer().id ? this.WIN : this.DEFEAT;
 			}
 		}
 		
