@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars V2 - Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.2
+// @version			0.2.1
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -201,7 +201,7 @@ function updateAI(aiId) {
 		
 		if(previousVersion==null || previousVersion.code!=newVersion.code) {
 			// Updating !
-			console.log("Updating "+newVersion.name);
+			//console.log("Updating "+newVersion.name);
 			
 			var lines = newVersion.code.split("\n");
 			
@@ -371,13 +371,16 @@ function updateAI(aiId) {
 }
 
 function update() {
-	console.log("Doc update !");
-	
-	unsafeWindow.LW_API.getAIs(function(ias){
-		$.each(ias,function(index,ai){
-			updateAI(ai.id);
+	if(unsafeWindow.LW.keywords!=null) {
+		
+		unsafeWindow.LW_API.getAIs(function(ias){
+			$.each(ias,function(index,ai){
+				updateAI(ai.id);
+			});
 		});
-	});
+	}
+	
+	
 }
 
 setInterval(update,5000);
@@ -390,32 +393,36 @@ function getEditor() {
 function leekwarsUpdateHintDetails() {
 	var editor = getEditor();
 	
-	var dialog = editor.hintDialog;
-	
-	if(dialog.css("display")=="block") {	
-	//	console.log("hintDialog visible !");
-		var alreadyPresentHints = {};
+	if(editor!=null) {
+		var dialog = editor.hintDialog;
 		
-		var completions = editor.completions;
-	//console.log(completions);
-		// doc présente
-		for(var index=completions.length-1;index>=0;index--) {
-		//	console.log(alreadyPresentHints);
-		//	console.log(completion);
-			var completion = completions[index];
-			if(completion.type!="keyword") {
-				alreadyPresentHints[completion.text] = true;
-			} else if(alreadyPresentHints[completion.text]) {
-			//	console.log("to remove !");
-				//var element = dialog.find(".hint:nth-child("+(index+1)+")");
-				//if(element.text()==completion.name) {
-					completions.splice(index,1);
-					dialog.find(".hint:nth-child("+(index+1)+")").remove();
-					dialog.find(".detail:nth-child("+(index+1)+")").remove();
-				//}
+		if(dialog.css("display")=="block") {	
+		//	console.log("hintDialog visible !");
+			var alreadyPresentHints = {};
+			
+			var completions = editor.completions;
+		//console.log(completions);
+			// doc présente
+			for(var index=completions.length-1;index>=0;index--) {
+			//	console.log(alreadyPresentHints);
+			//	console.log(completion);
+				var completion = completions[index];
+				if(completion.type!="keyword") {
+					alreadyPresentHints[completion.text] = true;
+				} else if(alreadyPresentHints[completion.text]) {
+				//	console.log("to remove !");
+					//var element = dialog.find(".hint:nth-child("+(index+1)+")");
+					//if(element.text()==completion.name) {
+						completions.splice(index,1);
+						dialog.find(".hint:nth-child("+(index+1)+")").remove();
+						dialog.find(".detail:nth-child("+(index+1)+")").remove();
+					//}
+				}
 			}
 		}
 	}
+	
+	
 }
 
 setInterval(leekwarsUpdateHintDetails,100);
