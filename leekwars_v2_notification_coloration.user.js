@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars V2 - Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.8
+// @version			0.8.1
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -341,6 +341,7 @@ function processNext() {
 	
 	processing = true;
 	var notification = toProcess.shift();	
+//	console.log(notification);
 	//console.log(notification);
 	notification.attr("colored","true");
 	var notificationId = notification.attr("href");
@@ -366,12 +367,14 @@ function processNext() {
 	
 	var fightId = getFightId(notificationId);
 	//console.log("fightId : "+fightId);
-
+	//console.log("fightId : "+fightId);
 	if(fightId!==null) {
 		notificationData.type = NOTIFICATION_TYPE_FIGHT;
 		unsafeWindow.LW_API.getFight(fightId,function(fight) {
+		//	console.log(fight);
 			if(fight!==null) {
 				var result = unsafeWindow.LW_API.getMyFightResult(fight);
+			//	console.log(result);
 				if(result!=null) {
 					notificationData.result = result;
 					setNotification(notificationData);
@@ -398,6 +401,7 @@ function processNext() {
 		return;
 	}
 	
+//	console.log("tournamentId : "+tournamentId);
 	if(tournamentId!==null) {
 		
 		notificationData.type = NOTIFICATION_TYPE_TOURNAMENT;

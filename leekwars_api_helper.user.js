@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars V2 - API Helper
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.4
+// @version			0.4.1
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
 // @downloadURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_api_helper.user.js
@@ -233,7 +233,7 @@ unsafeWindow.LW_API = {
 			if(fight.fight.type=="solo") {
 				winnerData = fight.fight["leeks"+winnerId].length==0 ? {"id":0} : fight.fight["leeks"+winnerId][0];
 				return this.getMyFarmer().leeks[winnerData.id]!=null ? this.WIN : this.DEFEAT;
-			} else if(fight.fight.type=="team") {
+			} else if(fight.fight.type=="team" || fight.fight.type==2) {
 				winnerData = fight.fight["team"+winnerId];
 				return winnerData==this.getMyFarmer().team.id ? this.WIN : this.DEFEAT;
 			} else if(fight.fight.type=="farmer") {
