@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars V2 - Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.2.1
+// @version			0.2.2
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -215,10 +215,17 @@ function updateAI(aiId) {
 			
 				var displayedLineNumber = lineNumber+1;
 				var text = line.trim().replace(/\s+/g," ");
+				if(text.indexOf(LEEKWARS_DOC_END)==-1) {
+					text = text.replace(/^\*+\s*/,"");
+				}
+				
 				
 				var functionName = getFunctionDeclarationName(text);
 				var globalName = getGlobalDeclarationName(text);
 				var varName = getVarDeclarationName(text);
+				
+				console.log(text);
+				
 				
 				if(text==LEEKWARS_DOC_START) {
 					
@@ -247,7 +254,7 @@ function updateAI(aiId) {
 					currentDoc.line = displayedLineNumber;
 					
 					newVersion.docs[currentDoc.name] = currentDoc;
-				//	console.log(currentDoc);
+					console.log(currentDoc);
 					currentDoc = null;
 				
 				} else if(globalName!=null) {
