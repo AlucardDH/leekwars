@@ -230,7 +230,7 @@ function updateAI(aiId) {
 				var globalName = getGlobalDeclarationName(text);
 				var varName = getVarDeclarationName(text);
 				
-				console.log(text);
+				//console.log(text);
 				
 				
 				if(text==LEEKWARS_DOC_START) {
@@ -260,7 +260,7 @@ function updateAI(aiId) {
 					currentDoc.line = displayedLineNumber;
 					
 					newVersion.docs[currentDoc.name] = currentDoc;
-					console.log(currentDoc);
+					//console.log(currentDoc);
 					currentDoc = null;
 				
 				} else if(globalName!=null) {
