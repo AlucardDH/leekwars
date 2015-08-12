@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name			Leek Wars V2 - Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.2.2
+// @version			0.2.3
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
@@ -118,6 +118,9 @@ function docToString(doc){
 		for(var paramIndex=0;paramIndex<doc.params.length;paramIndex++) {
 			var param = doc.params[paramIndex];
 			result += "<li>"+param.name;
+			if(param.type) {
+				result += " <i>("+param.type+")</i>"
+			}
 			if(param.description) {
 				result += " : "+param.description;
 			}
@@ -130,6 +133,9 @@ function docToString(doc){
 	if(doc.result) {
 		result += "<br/><b>Retour</b><ul>";
 		result += "<li>"+doc.result.name;
+		if(doc.result.type) {
+			result += " <i>("+doc.result.type+")</i>"
+		}
 		if(doc.result.description) {
 			result += " : "+doc.result.description;
 		}
@@ -311,8 +317,13 @@ function updateAI(aiId) {
 						
 					} else if(paramIndex>-1) {
 						var subText = text.substring(paramIndex+LEEKWARS_DOC_PARAM.length).trim();
-						var paramNameEndIndex = subText.indexOf(" ");
 						var param = {};
+						if(subText.indexOf("(")==0) {
+							var typeEndIndex = subText.indexOf(")");
+							param.type = subText.substring(1,typeEndIndex);
+							subText = subText.substring(typeEndIndex+1).trim();
+						}
+						var paramNameEndIndex = subText.indexOf(" ");
 						if(paramNameEndIndex>-1) {
 							param.name = subText.substring(0,paramNameEndIndex);
 							param.description = subText.substring(paramNameEndIndex).trim();
@@ -323,8 +334,13 @@ function updateAI(aiId) {
 						
 					} else if(returnIndex>-1) {
 						var subText = text.substring(returnIndex+LEEKWARS_DOC_RETURN.length).trim();
-						var paramNameEndIndex = subText.indexOf(" ");
 						var param = {};
+						if(subText.indexOf("(")==0) {
+							var typeEndIndex = subText.indexOf(")");
+							param.type = subText.substring(1,typeEndIndex);
+							subText = subText.substring(typeEndIndex+1).trim();
+						}
+						var paramNameEndIndex = subText.indexOf(" ");
 						if(paramNameEndIndex>-1) {
 							param.name = subText.substring(0,paramNameEndIndex);
 							param.description = subText.substring(paramNameEndIndex).trim();
