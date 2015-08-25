@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Leek Wars V2 - API Helper
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.4.2
+// @version			0.5
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
 // @downloadURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_api_helper.user.js
@@ -13,6 +13,8 @@
 // @include        	http://leekwars.com/*
 // @grant			unsafeWindow
 // ==/UserScript==
+
+var TEAM_COMPO_REGEX = /^(.+) - (.+) \(([0-9]+)\)$/i;
 
 unsafeWindow.LW_API = {
 
@@ -73,6 +75,70 @@ unsafeWindow.LW_API = {
 		
 		var url = unsafeWindow.LW.api+"team/get/"+teamId;
 		$.getJSON(url,handler);
+	},
+	
+	getCompos:function(teamId,handler) {
+		this.getTeam(teamId,function(teamData) {
+			var compos = {};
+			var tournamentsToTest = [];
+			$.each(teamData.team.tournaments,function(index,tournamentMiniData) {
+				tournamentsToTest.push(tournamentMiniData.id);
+			});
+			var next = function() {
+				if(tournamentsToTest.length==0) {
+					var resultCompos = [];
+					$.each(compos,function(compoName,compo) {
+						resultCompos.push(compo);
+					});
+					handler(resultCompos);
+				} else {
+					var tournamentId = tournamentsToTest.pop();
+					unsafeWindow.LW_API.getTournament(tournamentId,function(tournamentData) {
+						$.each(tournamentData.tournament.rounds.sixteenths,function(index,roundData) {
+							var constestant1 = roundData.contestants[0] && roundData.contestants[0].link.endsWith(teamId) ? roundData.contestants[0] : null;
+							var team1Infos = constestant1 ? constestant1.name.match(TEAM_COMPO_REGEX) : null;
+							var compo1 = constestant1 ? {"teamId":teamId,"teamName":team1Infos[1],"compoName":team1Infos[2],compoLevel:team1Infos[3]}: null;
+							if(compo1) {
+								if(compos[compo1.compoName]) {
+									compo1 = null;
+								} else {
+									compos[compo1.compoName] = compo1;
+								}
+							}
+							
+							var constestant2 = roundData.contestants[1] && roundData.contestants[1].link.endsWith(teamId) ? roundData.contestants[1] : null;
+							var team2Infos = constestant2 ? constestant2.name.match(TEAM_COMPO_REGEX) : null;
+							var compo2 = constestant2 ? {"teamId":teamId,"teamName":team2Infos[1],"compoName":team2Infos[2],compoLevel:team2Infos[3]}: null;
+							if(compo2) {
+								if(compos[compo2.compoName]) {
+									compo2 = null;
+								} else {
+									compos[compo2.compoName] = compo2;
+								}
+							}
+							
+							if(compo1 || compo2) {
+								var fightId = roundData.fight.substring(roundData.fight.lastIndexOf("/")+1);
+								
+								unsafeWindow.LW_API.getFight(fightId,function(fightData) {
+									if(compo1) {
+										compo1.leeks = fightData.fight.leeks1;
+										compos[compo1.compoName] = compo1;
+									}
+									if(compo2) {
+										compo2.leeks = fightData.fight.leeks1;
+										compos[compo2.compoName] = compo2;
+									}
+								});
+							}
+							
+						});
+						next();
+					});
+				}
+			};
+			next();
+		});
 	},
 	
 // Fights
