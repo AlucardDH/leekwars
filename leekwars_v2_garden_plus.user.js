@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          [Leek Wars] Fast Garden Plus
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version       0.12
+// @version       0.12.1
 // @description   Permet de lancer plus rapidement ses combats
 // @author        jojo123 & AlucardDH
 // @namespace		https://github.com/AlucardDH/leekwars
@@ -300,7 +300,7 @@ function refreshScores() {
 
 	}
 
-	// Récupération du résultat des combats
+	// RÃ©cupÃ©ration du rÃ©sultat des combats
 	function refreshResults()
 	{
 		if (!loading)
