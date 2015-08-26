@@ -8,7 +8,6 @@
 // @namespace		https://github.com/AlucardDH/leekwars/raw/master/leekwars_v2_garden_plus.user.js
 // @namespace		https://github.com/AlucardDH/leekwars/raw/master/leekwars_v2_garden_plus.user.js
 // @match         http://leekwars.com/*
-// @require 	  http://leekwars.com/static/lib/jquery-2.1.1.min.js
 // @grant		  GM_addStyle
 // @grant		  GM_getValue
 // @grant		  GM_setValue
@@ -20,7 +19,7 @@ var GM_STORAGE = "leekwars.fights";
 function getFights() {
 	var saved = GM_getValue(GM_STORAGE);
 	if(saved) {
-		return JSON.parse(savedNotif);
+		return JSON.parse(saved);
 	} else {
 		return {};
 	}
@@ -30,18 +29,18 @@ var FIGHTS;
 
 function getWaitingFight(source,target,fightId,fightIndex) {
 	_.get('fight/get/'+fightId, function(data){
-		if (!loading && data.success && data.fight.status == 1) {
+		if (data.success && data.fight.status == 1) {
 			switch (data.fight.winner) {
 				case 1:
-					scores.win++;
+					FIGHTS[source][target].win++;
 					break;
 				case 2:
-					scores.defeat++;
+					FIGHTS[source][target].defeat++;
 					break;
 				default:
-					scores.draw++;
+					FIGHTS[source][target].draw++;
 			}
-			FIGHTS[source][target].waiting = FIGHTS[source][target].waiting.splice(fightIndex,1);
+			FIGHTS[source][target].waiting.splice(fightIndex,1);
 			saveFights();
 		} else {
 			setTimeout(function(){
@@ -54,10 +53,12 @@ function getWaitingFight(source,target,fightId,fightIndex) {
 function getWaitingFights() {
 	$.each(FIGHTS,function(source,targets) {
 		$.each(targets,function(target,scores) {
-			var newWaiting = [];
-			$.each(scores.waiting,function(index,waiting) {
-				getWaitingFight(source,target,waiting,index);
-			});
+			if(scores!=null) {
+				var newWaiting = [];
+				$.each(scores.waiting,function(index,waiting) {
+					getWaitingFight(source,target,waiting,index);
+				});
+			}
 		});
 	});
 }
@@ -67,20 +68,104 @@ function saveFights() {
 }
 
 function addFight(type,params,fightId) {
-	var source = type=="solo" ? type+"_"+params.leek_id : type;
-	var target = params.target_id;
+	var source = null;
+	if(type=="solo") {
+		source = "solo_"+params.leek_id;
+	} else if(type=="team") {
+		source = "team_"+params.composition_id;
+	} else if(type=="farmer") {
+		source = "farmer_"+LW.farmer.id;
+	}
+	var target = type+"_"+params.target_id;
 	
 	var sourceFights = FIGHTS[source];
 	if(!sourceFights) {
-		FIGHTS[source] = [];
+		FIGHTS[source] = {};
+		sourceFights = FIGHTS[source];
 	}
 	var targetResults = sourceFights[target];
 	if(!targetResults) {
 		FIGHTS[source][target] = {win:0,defeat:0,draw:0,waiting:[]};
 	}
 	FIGHTS[source][target].waiting.push(fightId);
+	
 	saveFights();
 	getWaitingFight(source,target,fightId,FIGHTS[source][target].waiting.length-1);
+}
+
+function getScores(source,target) {
+	return FIGHTS[source] && FIGHTS[source][target] ? FIGHTS[source][target] : null;
+}
+
+function refreshScores() {
+	//console.log("Current stats :");
+	//console.log(FIGHTS);
+	
+	// solo
+	var leeksEnemies = $("div.enemies");
+	$.each(leeksEnemies,function(index,leekEnemies) {
+		leekEnemies = $(leekEnemies);
+		var source = "solo_"+leekEnemies.attr("ofleek");
+	//	console.log("searching source : "+source);
+		$.each(leekEnemies.children(),function(index2,enemy){
+			enemy = $(enemy);
+			var target = "solo_"+enemy.attr("leek");
+		//	console.log("searching target : "+target);
+			var scores = getScores(source,target);
+			if(scores) {
+				//console.log("Found ! "+source+" > "+target+" : "+scores);
+				var span = enemy.find("span.scores");
+				if(span.length==0) {
+					span = $('<span class="scores" style="font-size:75%"></span>');
+					enemy.append("<br/>");
+					enemy.append(span);
+				}
+				span.html('<span style="color:green">Win:'+scores.win+'</span> <span style="color:grey">Draw:'+scores.draw+'</span> <span style="color:red">Defeat:'+scores.defeat+'</span>');
+			}
+		});
+	});
+	
+	leeksEnemies = $("div.enemy.farmer");
+	var source = "farmer_"+LW.farmer.id;
+	$.each(leeksEnemies,function(index,enemy){
+		enemy = $(enemy);
+		var target = "farmer_"+enemy.attr("id");
+		//console.log("searching "+source+" > "+target);
+		var scores = getScores(source,target);
+		if(scores) {
+			//console.log("Found ! "+source+" > "+target+" : "+scores);
+			var span = enemy.find("span.scores");
+			if(span.length==0) {
+				span = $('<span class="scores" style="font-size:75%"></span>');
+				enemy.append("<br/>");
+				enemy.append(span);
+			}
+			span.html('<span style="color:green">Win:'+scores.win+'</span> <span style="color:grey">Draw:'+scores.draw+'</span> <span style="color:red">Defeat:'+scores.defeat+'</span>');
+		}
+	});
+	
+	leeksEnemies = $("div.enemies-compos");
+	$.each(leeksEnemies,function(index,leekEnemies) {
+		leekEnemies = $(leekEnemies);
+		var source = "team_"+leekEnemies.attr("compo");
+	//	console.log("searching source : "+source);
+		$.each(leekEnemies.children(),function(index2,enemy){
+			enemy = $(enemy);
+			var target = "team_"+enemy.attr("id");
+		//	console.log("searching target : "+target);
+			var scores = getScores(source,target);
+			if(scores) {
+				//console.log("Found ! "+source+" > "+target+" : "+scores);
+				var span = enemy.find("span.scores");
+				if(span.length==0) {
+					span = $('<span class="scores" style="font-size:75%"></span>');
+					enemy.append("<br/>");
+					enemy.append(span);
+				}
+				span.html('<span style="color:green">Win:'+scores.win+'</span> <span style="color:grey">Draw:'+scores.draw+'</span> <span style="color:red">Defeat:'+scores.defeat+'</span>');
+			}
+		});
+	});
 }
 
 
@@ -89,7 +174,9 @@ function addFight(type,params,fightId) {
 
 	FIGHTS = getFights();
 	getWaitingFights();
-
+	
+	setInterval(refreshScores,1000);
+	
 	var loading = false;
 
 	var request_counter = 0;
@@ -165,7 +252,9 @@ function addFight(type,params,fightId) {
 				if (data.success)
 				{
 					var fight_id = data.fight;
+					addFight(type, params, fight_id);
 					addHistory(type, params, fight_id);
+					
 				}
 				refreshInterface();
 			});
