@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          [Leek Wars] Fast Garden Plus
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version       0.12.1
+// @version       0.12.2
 // @description   Permet de lancer plus rapidement ses combats
 // @author        jojo123 & AlucardDH
 // @namespace		https://github.com/AlucardDH/leekwars
@@ -26,6 +26,45 @@ function getFights() {
 }
 
 var FIGHTS;
+
+var LW_RED = "#ffb3ae";
+var LW_GREEN = "#b8ffb3";
+var LW_GREY = "#dcdcdc";
+
+function rgbToHex(rgb) {
+    return "#" + ((1 << 24) + (rgb.r << 16) + (rgb.g << 8) + rgb.b).toString(16).slice(1);
+}
+
+function hexToRgb(hex) {
+    return {
+        r: parseInt(hex.substring(1,3), 16),
+        g: parseInt(hex.substring(3,5), 16),
+        b: parseInt(hex.substring(5,7), 16)
+    };
+}
+
+function averageColor(colorsMap) {
+	var resultRgb = {r:0,g:0,b:0};
+	var totalCount = 0;
+	$.each(colorsMap,function(hex,count) {
+		totalCount += count;
+		var rgb = hexToRgb(hex);
+     //   console.log(hex+" > ");
+     //   console.log(rgb);
+		resultRgb.r += rgb.r*count;
+		resultRgb.g += rgb.g*count;
+		resultRgb.b += rgb.b*count;
+	});
+	if(totalCount==0) {
+		return "#dcdcdc";
+	}
+	
+	resultRgb.r = Math.floor(resultRgb.r/totalCount);
+	resultRgb.g = Math.floor(resultRgb.g/totalCount);
+	resultRgb.b = Math.floor(resultRgb.b/totalCount);
+
+	return rgbToHex(resultRgb);	
+}
 
 function getWaitingFight(source,target,fightId,fightIndex) {
 	_.get('fight/get/'+fightId, function(data){
@@ -121,6 +160,9 @@ function refreshScores() {
 					enemy.append(span);
 				}
 				span.html('<span style="color:green">Win:'+scores.win+'</span> <span style="color:grey">Draw:'+scores.draw+'</span> <span style="color:red">Defeat:'+scores.defeat+'</span>');
+				
+				var colors = {"#b8ffb3":scores.win,"#dcdcdc":scores.draw,"#ffb3ae":scores.defeat};
+				enemy.css("background",averageColor(colors));
 			}
 		});
 	});
@@ -141,6 +183,9 @@ function refreshScores() {
 				enemy.append(span);
 			}
 			span.html('<span style="color:green">Win:'+scores.win+'</span> <span style="color:grey">Draw:'+scores.draw+'</span> <span style="color:red">Defeat:'+scores.defeat+'</span>');
+			
+			var colors = {"#b8ffb3":scores.win,"#dcdcdc":scores.draw,"#ffb3ae":scores.defeat};
+            enemy.css("background",averageColor(colors));
 		}
 	});
 	
@@ -163,6 +208,9 @@ function refreshScores() {
 					enemy.append(span);
 				}
 				span.html('<span style="color:green">Win:'+scores.win+'</span> <span style="color:grey">Draw:'+scores.draw+'</span> <span style="color:red">Defeat:'+scores.defeat+'</span>');
+				
+				var colors = {"#b8ffb3":scores.win,"#dcdcdc":scores.draw,"#ffb3ae":scores.defeat};
+                enemy.css("background",averageColor(colors));
 			}
 		});
 	});
