@@ -1,16 +1,13 @@
 ﻿// ==UserScript==
 // @name			Leek Wars V2 - Editor Custom Documentation
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.2.3
+// @version			0.2.4
 // @description		Help you to visualize your own documention in your code
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
 // @downloadURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_v2_custom_documentation.user.js
 // @updateURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_v2_custom_documentation.user.js
-// @match			http://leekwars.com
-// @match			http://leekwars.com/*
-// @include        	http://leekwars.com
-// @include        	http://leekwars.com/*
+// @match         	*://*.leekwars.com/*
 // @require 		http://leekwars.com/static/lib/jquery-2.1.1.min.js
 // @grant			GM_addStyle
 // @grant			unsafeWindow

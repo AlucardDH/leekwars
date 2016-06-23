@@ -1,16 +1,13 @@
 // ==UserScript==
 // @name			Leek Wars V2 - Notifications Coloration
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.8.1
+// @version			0.8.2
 // @description		Colorize Leekwars notifications
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
 // @downloadURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_v2_notification_coloration.user.js
 // @updateURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_v2_notification_coloration.user.js
-// @match			http://leekwars.com
-// @match			http://leekwars.com/*
-// @include        	http://leekwars.com
-// @include        	http://leekwars.com/*
+// @match         	*://*.leekwars.com/*
 // @require 		http://leekwars.com/static/lib/jquery-2.1.1.min.js
 // @grant			GM_addStyle
 // @grant			GM_getValue
