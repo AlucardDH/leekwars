@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name          [Leek Wars] Fast Garden Plus
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version       0.12.2
+// @version       0.12.3
 // @description   Permet de lancer plus rapidement ses combats
 // @author        jojo123 & AlucardDH
 // @namespace		https://github.com/AlucardDH/leekwars
 // @namespace		https://github.com/AlucardDH/leekwars/raw/master/leekwars_v2_garden_plus.user.js
 // @namespace		https://github.com/AlucardDH/leekwars/raw/master/leekwars_v2_garden_plus.user.js
-// @match         http://leekwars.com/*
+// @match         	*://*.leekwars.com/*
 // @grant		  GM_addStyle
 // @grant		  GM_getValue
 // @grant		  GM_setValue

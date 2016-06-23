@@ -1,16 +1,13 @@
 // ==UserScript==
 // @name			Leek Wars V2 - API Helper
 // @namespace		https://github.com/AlucardDH/leekwars
-// @version			0.5
+// @version			0.5.1
 // @author			AlucardDH
 // @projectPage		https://github.com/AlucardDH/leekwars
 // @downloadURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_api_helper.user.js
 // @updateURL		https://github.com/AlucardDH/leekwars/raw/master/leekwars_api_helper.user.js
 // @require 		http://leekwars.com/static/lib/jquery-2.1.1.min.js
-// @match			http://leekwars.com
-// @match			http://leekwars.com/*
-// @include        	http://leekwars.com
-// @include        	http://leekwars.com/*
+// @match         	*://*.leekwars.com/*
 // @grant			unsafeWindow
 // ==/UserScript==
 
