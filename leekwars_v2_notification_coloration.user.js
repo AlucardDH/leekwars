@@ -434,6 +434,7 @@ function processNext() {
 ////////// INIT /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 checkCache();
 initStyles();
+initSettings();
 
 setInterval(function() {
 	//console.log("checkNotif (processing : "+processing+")");
@@ -570,4 +571,75 @@ setInterval(function() {
 },2000);
 
 
+function getStyleSettings(styleType) {
+	var style = getStyle(styleType);
 
+	var result = $('<div style="margin:4px 0;"></div>');
+	var backgroundColor = $('<input class="card" type="color" name="'+styleType+'_background" id="'+styleType+'_background" value="'+style.background+'"/>');
+	backgroundColor.change(function() {
+		var currentStyle = getStyle(styleType);
+		currentStyle.background = this.value;
+		setStyle(styleType,currentStyle);
+	});
+	result.append(backgroundColor);
+	result.append(' <label for="'+styleType+'_background">'+DEFAULT_STYLES_NAMES[styleType]+'</label>');
+	//result.append("<br/>");
+
+	//result.append(backgroundColor);
+	return result;
+}
+
+function initSettings() {
+	LW.on('pageload', function()
+	{
+		if (LW.currentPage == 'settings')
+		{
+			var settingsContainer = $('#settings-page .flex-container');
+			if(settingsContainer.length>0) {
+				var header = $('<div/>')
+					.attr('id', '#notifications-coloration-settings')
+					.addClass('header')
+					.append($('<h2/>').text('Notifications Coloration'));
+				var settings = $('<div/>').addClass('content');
+
+				// Icons only
+				var checkboxIconOnly = $('<input type="checkbox" name="notifColor_iconOnly" id="notifColor_iconOnly"/>');
+				if(isIconOnly()) {
+					checkboxIconOnly.attr("checked","checked");
+				} else {
+					checkboxIconOnly.removeAttr("checked");
+				}
+
+				checkboxIconOnly.change(function() {
+					setIconOnly(this.checked);
+				});
+				settings.append(checkboxIconOnly);
+				settings.append('<label for="notifColor_iconOnly">Colorer uniquement les ic&ocirc;nes</label>');
+				settings.append("<br/><br/><h3>Couleurs des notifications</h3>");
+
+				for(var styleType in DEFAULT_STYLES) {
+					settings.append(getStyleSettings(styleType));
+				}
+
+				var reset = $('<input class="button" type="button" name="notifColor_reset" id="notifColor_reset" value="Reset"/>');
+				reset.click(function(){
+					for(var styleType in DEFAULT_STYLES) {
+						var styleId = GM_STORAGE+"style."+styleType;
+						GM_deleteValue(styleId);
+					}
+					location.reload();
+				});
+
+				settings.append(reset);
+
+				settings.append("<br/><br/></div>");
+
+				settingsContainer.first()
+					.append($('<div class="column6"/>')
+						.append($('<div class="panel"/>')
+							.append(header)
+							.append(settings)));
+			}
+		}
+	});
+}
